@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ai-event-scraper
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python api_server.py --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ENVIRONMENT
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: $PORT
+      - key: MAX_CONCURRENT_REQUESTS
+        value: "50"
+      - key: REQUEST_DELAY_SECONDS
+        value: "0.5"
+      - key: AI_BATCH_SIZE
+        value: "20"

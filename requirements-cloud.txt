@@ -1,0 +1,34 @@
+# AI Event Scraper - Cloud Production Requirements
+# Optimized for cloud deployment with minimal dependencies
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# Database
+motor==3.3.2
+pymongo==4.6.0
+
+# Web Scraping
+beautifulsoup4==4.12.2
+requests==2.31.0
+aiohttp==3.9.1
+fake-useragent==1.4.0
+lxml==4.9.3
+
+# CLI and Configuration
+typer==0.9.0
+rich==13.7.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+
+# AI Processing
+openai==1.3.7
+
+# Utilities
+geopy==2.4.1
+python-dateutil==2.8.2
+
+# Optional: For data generation and testing
+faker==20.1.0
