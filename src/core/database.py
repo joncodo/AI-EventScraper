@@ -66,8 +66,9 @@ class Database:
         for index_spec in indexes:
             try:
                 await collection.create_index(index_spec)
+                logger.info(f"Created index: {index_spec}")
             except Exception as e:
-                logger.warning(f"Failed to create index {list(index_spec)}: {e}")
+                logger.warning(f"Failed to create index {index_spec}: {e}")
     
     async def insert_event(self, event: Event) -> str:
         """Insert a new event into the database."""
