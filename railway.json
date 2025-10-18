@@ -5,7 +5,7 @@
     "buildCommand": "pip install --no-cache-dir -r requirements-railway.txt"
   },
   "deploy": {
-    "startCommand": "python railway_fixed.py",
+    "startCommand": "python railway_final.py",
     "healthcheckPath": "/ping",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",

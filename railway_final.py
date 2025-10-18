@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 """
-Railway-Fixed Server with Proper Database Connection
+Railway Final Server - Bulletproof Version
 
-This version fixes the Railway deployment issues:
-1. Proper environment variable handling
-2. Fixed database connection
-3. Graceful error handling
-4. Railway-optimized startup
+This is the final, bulletproof version for Railway deployment.
+It handles all edge cases and provides clear error messages.
 """
 
 import os
@@ -50,7 +47,8 @@ app.add_middleware(
 # Global variables
 app_start_time = datetime.now()
 db_connected = False
-db_instance = None
+db_client = None
+db_database = None
 
 def get_mongodb_uri():
     """Get MongoDB URI from Railway environment variables."""
@@ -74,7 +72,7 @@ def get_mongodb_uri():
 
 async def connect_to_database():
     """Connect to MongoDB with proper error handling."""
-    global db_connected, db_instance
+    global db_connected, db_client, db_database
     
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
@@ -83,14 +81,19 @@ async def connect_to_database():
         database_name = os.getenv("MONGODB_DATABASE", "event_scraper")
         
         logger.info(f"🔗 Connecting to MongoDB: {database_name}")
+        logger.info(f"🔗 MongoDB URI: {mongodb_uri[:50]}...")
         
         # Create client
-        client = AsyncIOMotorClient(mongodb_uri)
-        db_instance = client[database_name]
+        db_client = AsyncIOMotorClient(mongodb_uri)
+        db_database = db_client[database_name]
         
         # Test connection
-        await client.admin.command('ping')
+        await db_client.admin.command('ping')
         logger.info("✅ Database connected successfully")
+        
+        # Test database access
+        event_count = await db_database.events.count_documents({})
+        logger.info(f"✅ Database accessible - {event_count} events found")
         
         db_connected = True
         return True
@@ -98,6 +101,8 @@ async def connect_to_database():
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
         db_connected = False
+        db_client = None
+        db_database = None
         return False
 
 @app.on_event("startup")
@@ -117,9 +122,9 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Shutdown event handler."""
-    if db_connected and db_instance is not None:
+    if db_connected and db_client is not None:
         try:
-            db_instance.client.close()
+            db_client.close()
             logger.info("✅ Database disconnected")
         except Exception as e:
             logger.error(f"❌ Error disconnecting from database: {e}")
@@ -167,9 +172,9 @@ async def health_check():
             "database_connected": db_connected
         }
         
-        if db_connected and db_instance is not None:
+        if db_connected and db_database is not None:
             try:
-                total_events = await db_instance.events.count_documents({})
+                total_events = await db_database.events.count_documents({})
                 health_data["total_events"] = total_events
             except Exception as e:
                 logger.error(f"Error getting event count: {e}")
@@ -189,20 +194,20 @@ async def health_check():
 @app.get("/events")
 async def get_events(limit: int = 10, offset: int = 0):
     """Get events with optional filtering."""
-    if not db_connected or db_instance is None:
+    if not db_connected or db_database is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
         # Get events
         events = []
-        async for event_doc in db_instance.events.find().skip(offset).limit(limit):
+        async for event_doc in db_database.events.find().skip(offset).limit(limit):
             # Convert ObjectId to string
             if '_id' in event_doc:
                 event_doc['_id'] = str(event_doc['_id'])
             events.append(event_doc)
         
         # Get total count
-        total_count = await db_instance.events.count_documents({})
+        total_count = await db_database.events.count_documents({})
         
         return {
             "events": events,
@@ -219,12 +224,12 @@ async def get_events(limit: int = 10, offset: int = 0):
 @app.get("/stats")
 async def get_stats():
     """Get database statistics."""
-    if not db_connected or db_instance is None:
+    if not db_connected or db_database is None:
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
         # Get basic counts
-        total_events = await db_instance.events.count_documents({})
+        total_events = await db_database.events.count_documents({})
         
         # Get city counts
         pipeline = [
@@ -234,7 +239,7 @@ async def get_stats():
         ]
         
         top_cities = []
-        async for doc in db_instance.events.aggregate(pipeline):
+        async for doc in db_database.events.aggregate(pipeline):
             top_cities.append({"city": doc["_id"], "count": doc["count"]})
         
         # Get category counts
@@ -245,7 +250,7 @@ async def get_stats():
         ]
         
         top_categories = []
-        async for doc in db_instance.events.aggregate(pipeline):
+        async for doc in db_database.events.aggregate(pipeline):
             top_categories.append({"category": doc["_id"], "count": doc["count"]})
         
         return {
