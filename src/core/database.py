@@ -23,7 +23,9 @@ class Database:
     async def connect(self):
         """Connect to MongoDB."""
         try:
-            self.client = AsyncIOMotorClient(settings.mongodb_url)
+            # Use mongodb_uri if available (for cloud deployments), otherwise use mongodb_url
+            connection_string = settings.mongodb_uri or settings.mongodb_url
+            self.client = AsyncIOMotorClient(connection_string)
             self.db = self.client[settings.mongodb_database]
             
             # Test connection

@@ -17,29 +17,25 @@ Usage:
     python api_server.py [--host HOST] [--port PORT] [--reload]
 """
 
-import asyncio
 import sys
-import os
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Union
-from enum import Enum
+from typing import List, Optional, Dict, Any
 
 # Add src directory to Python path
 project_root = Path(__file__).parent
 src_path = project_root / "src"
 sys.path.insert(0, str(src_path))
 
-from fastapi import FastAPI, HTTPException, Query, Path, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from bson import ObjectId
 import uvicorn
 
 from core.database import db
-from core.models import Event, Location, ContactInfo, EventSource
+from core.models import Location, ContactInfo, EventSource
 
 # Configure logging
 logging.basicConfig(
@@ -152,7 +148,11 @@ app_start_time = datetime.now()
 # Dependency to get database connection
 async def get_database():
     if not db.db:
-        await db.connect()
+        try:
+            await db.connect()
+        except Exception as e:
+            logger.warning(f"Database connection failed: {e}")
+            return None
     return db.db
 
 # Helper functions
@@ -179,6 +179,7 @@ async def root():
     return {
         "message": "AI Event Scraper API",
         "version": "1.0.0",
+        "status": "running",
         "docs": "/docs",
         "redoc": "/redoc",
         "endpoints": {
@@ -191,18 +192,36 @@ async def root():
         }
     }
 
+@app.get("/ping")
+async def ping():
+    """Simple ping endpoint for basic health checks"""
+    return {"status": "ok", "timestamp": datetime.now()}
+
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     """Health check endpoint"""
     try:
-        database = await get_database()
-        total_events = await database.events.count_documents({})
         uptime = (datetime.now() - app_start_time).total_seconds()
         
+        # Try to connect to database, but don't fail if it's not available
+        database_connected = False
+        total_events = 0
+        
+        try:
+            database = await get_database()
+            if database is not None:
+                total_events = await database.events.count_documents({})
+                database_connected = True
+        except Exception as db_error:
+            logger.warning(f"Database connection failed during health check: {db_error}")
+            database_connected = False
+        
+        # Return healthy status even if database is not connected
+        # This allows the service to start and be ready to accept connections
         return HealthResponse(
             status="healthy",
             timestamp=datetime.now(),
-            database_connected=True,
+            database_connected=database_connected,
             total_events=total_events,
             uptime_seconds=uptime
         )
@@ -221,6 +240,8 @@ async def get_statistics():
     """Get comprehensive database statistics"""
     try:
         database = await get_database()
+        if database is None:
+            raise HTTPException(status_code=503, detail="Database not available")
         
         # Basic counts
         total_events = await database.events.count_documents({})
@@ -326,6 +347,8 @@ async def get_events(
     """Get events with filtering and pagination"""
     try:
         database = await get_database()
+        if database is None:
+            raise HTTPException(status_code=503, detail="Database not available")
         
         # Build filter query
         filter_query = {}
@@ -418,7 +441,7 @@ async def get_event(event_id: str = Path(..., description="Event ID")):
         # Validate ObjectId
         try:
             object_id = ObjectId(event_id)
-        except:
+        except Exception:
             raise HTTPException(status_code=400, detail="Invalid event ID format")
         
         # Find event
@@ -467,7 +490,7 @@ async def update_event(event_id: str, event_update: EventUpdate):
         # Validate ObjectId
         try:
             object_id = ObjectId(event_id)
-        except:
+        except Exception:
             raise HTTPException(status_code=400, detail="Invalid event ID format")
         
         # Check if event exists
@@ -501,7 +524,7 @@ async def delete_event(event_id: str):
         # Validate ObjectId
         try:
             object_id = ObjectId(event_id)
-        except:
+        except Exception:
             raise HTTPException(status_code=400, detail="Invalid event ID format")
         
         # Delete event
@@ -667,7 +690,8 @@ async def startup_event():
         logger.info("🚀 API Server started successfully")
         logger.info("📊 Connected to MongoDB")
     except Exception as e:
-        logger.error(f"❌ Failed to start API server: {e}")
+        logger.warning(f"⚠️ Failed to connect to MongoDB on startup: {e}")
+        logger.info("🚀 API Server started successfully (database connection will be retried)")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -689,7 +713,7 @@ def main():
     
     args = parser.parse_args()
     
-    logger.info(f"🚀 Starting AI Event Scraper API Server")
+    logger.info("🚀 Starting AI Event Scraper API Server")
     logger.info(f"🌐 Host: {args.host}")
     logger.info(f"🔌 Port: {args.port}")
     logger.info(f"📚 Docs: http://{args.host}:{args.port}/docs")

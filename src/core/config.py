@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     
     # MongoDB Configuration
     mongodb_url: str = "mongodb://localhost:27017"
+    mongodb_uri: Optional[str] = None  # Alternative to mongodb_url for cloud deployments
     mongodb_database: str = "event_scraper"
     mongodb_max_pool_size: int = 100
     mongodb_min_pool_size: int = 10

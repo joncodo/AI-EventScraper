@@ -1,5 +1,5 @@
-# AI Event Scraper - Cloud Production Requirements
-# Optimized for cloud deployment with minimal dependencies
+# AI Event Scraper - Optimized Cloud Requirements
+# Minimal dependencies for faster deployment
 
 # Web Framework
 fastapi==0.104.1
@@ -9,7 +9,7 @@ uvicorn[standard]==0.24.0
 motor==3.3.2
 pymongo==4.6.0
 
-# Web Scraping
+# Web Scraping (Core)
 beautifulsoup4==4.12.2
 requests==2.31.0
 aiohttp==3.9.1
