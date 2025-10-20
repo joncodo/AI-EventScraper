@@ -10,9 +10,22 @@ from core.models import Event, Location, ContactInfo, EventSource
 
 logger = logging.getLogger(__name__)
 
-# Import required dependencies
-import feedparser
-import icalendar
+# Import required dependencies with fallback
+try:
+    import feedparser
+    FEEDPARSER_AVAILABLE = True
+except ImportError:
+    logger.warning("feedparser not available - RSS scraping will be disabled")
+    FEEDPARSER_AVAILABLE = False
+    feedparser = None
+
+try:
+    import icalendar
+    ICALENDAR_AVAILABLE = True
+except ImportError:
+    logger.warning("icalendar not available - iCal scraping will be disabled")
+    ICALENDAR_AVAILABLE = False
+    icalendar = None
 
 
 class RSSEventScraper:
@@ -340,13 +353,24 @@ class RSSEventScraper:
         """Scrape events from RSS and iCal feeds."""
         events = []
         
-        # Scrape RSS feeds
-        rss_events = await self._scrape_rss_feeds(city, country, start_date, end_date)
-        events.extend(rss_events)
+        # Check if dependencies are available
+        if not FEEDPARSER_AVAILABLE and not ICALENDAR_AVAILABLE:
+            logger.warning("Neither feedparser nor icalendar available - RSS scraper disabled")
+            return events
         
-        # Scrape iCal feeds
-        ical_events = await self._scrape_ical_feeds(city, country, start_date, end_date)
-        events.extend(ical_events)
+        # Scrape RSS feeds if available
+        if FEEDPARSER_AVAILABLE:
+            rss_events = await self._scrape_rss_feeds(city, country, start_date, end_date)
+            events.extend(rss_events)
+        else:
+            logger.info("RSS scraping disabled - feedparser not available")
+        
+        # Scrape iCal feeds if available
+        if ICALENDAR_AVAILABLE:
+            ical_events = await self._scrape_ical_feeds(city, country, start_date, end_date)
+            events.extend(ical_events)
+        else:
+            logger.info("iCal scraping disabled - icalendar not available")
         
         logger.info(f"RSS/iCal scraper found {len(events)} events")
         return events
@@ -360,6 +384,10 @@ class RSSEventScraper:
     ) -> List[Event]:
         """Scrape events from RSS feeds."""
         events = []
+        
+        if not FEEDPARSER_AVAILABLE:
+            logger.warning("feedparser not available - RSS scraping disabled")
+            return events
         
         for feed_url in self.event_rss_feeds:
             try:
@@ -407,6 +435,10 @@ class RSSEventScraper:
     ) -> List[Event]:
         """Scrape events from iCal feeds."""
         events = []
+        
+        if not ICALENDAR_AVAILABLE:
+            logger.warning("icalendar not available - iCal scraping disabled")
+            return events
         
         for ical_url in self.ical_feeds:
             try:
