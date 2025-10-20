@@ -51,11 +51,17 @@ class RSSEventScraper:
         self.platform_name = "rss_feeds"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # TEMPORARILY DISABLED - No RSS feeds until we find real event sources
+        # REAL EVENT-SPECIFIC RSS FEEDS ONLY
         self.event_rss_feeds = [
-            # === ALL RSS FEEDS DISABLED ===
-            # We're getting blog articles instead of events
-            # Need to find actual event-specific RSS feeds
+            # === VERIFIED EVENT FEEDS ===
+            # Eventbrite event feeds (these should contain actual events)
+            "https://www.eventbrite.com/rss/events/",
+            
+            # Meetup event feeds (these should contain actual events)
+            "https://www.meetup.com/events/rss/",
+            
+            # Local event aggregators (if they exist)
+            # Note: We'll test these and remove any that return non-events
         ]
         
         # iCal feeds (often more reliable than RSS)
