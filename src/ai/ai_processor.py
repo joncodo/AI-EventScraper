@@ -1,14 +1,14 @@
 """AI processing module for event data analysis and deduplication."""
-import asyncio
 import json
-from typing import List, Dict, Any, Optional, Tuple
+import os
+from typing import List, Tuple
 from datetime import datetime
 import logging
 from difflib import SequenceMatcher
 
 from openai import AsyncOpenAI
 from core.config import settings
-from core.models import Event, Location, ContactInfo
+from core.models import Event, ContactInfo
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,15 @@ class AIProcessor:
     """AI processor for event data analysis and deduplication."""
     
     def __init__(self):
-        if settings.openai_api_key:
-            self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        # Try multiple environment variable names for OpenAI API key
+        api_key = (
+            settings.openai_api_key or 
+            os.getenv("OPENAI_API_KEY") or 
+            os.getenv("EVENT_SCRAPER_OPENAI_API_KEY")
+        )
+        
+        if api_key:
+            self.client = AsyncOpenAI(api_key=api_key)
         else:
             self.client = None
             logger.warning("OpenAI API key not provided. AI features will be limited.")

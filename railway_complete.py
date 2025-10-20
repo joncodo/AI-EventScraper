@@ -19,6 +19,7 @@ from pathlib import Path as PathLib
 from typing import Optional
 from fastapi import FastAPI, HTTPException, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import uvicorn
 
 # Add src directory to Python path
@@ -38,13 +39,54 @@ logging.getLogger("uvicorn.error").setLevel(logging.INFO)
 logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager for startup and shutdown events."""
+    global db_connected, worker
+    logger.info("🚀 Starting AI Event Scraper API Server (railway_complete)")
+
+    # Try to connect to database (non-blocking)
+    await connect_to_database()
+
+    if db_connected:
+        logger.info("✅ Server started with database connection")
+    else:
+        logger.info("⚠️ Server started without database connection")
+
+    # Start continuous background refresh worker
+    if worker is None:
+        worker = BackgroundRefreshWorker()
+        worker.start()
+        logger.info("[worker] Background refresh worker started from railway_complete")
+
+    yield
+
+    # Shutdown
+    if worker is not None:
+        try:
+            await worker.stop()
+        except Exception as e:
+            logger.warning(f"Error stopping background worker: {e}")
+        worker = None
+
+    if db_connected and db_client is not None:
+        try:
+            db_client.close()
+            logger.info("✅ Database disconnected")
+        except Exception as e:
+            logger.error(f"❌ Error disconnecting from database: {e}")
+
+    logger.info("🛑 API Server shutdown complete")
+
+
 # Create FastAPI app
 app = FastAPI(
     title="AI Event Scraper API",
     description="A comprehensive REST API for accessing event data with full CRUD operations, search, filtering, and analytics",
     version="2.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Add CORS middleware
@@ -110,47 +152,6 @@ async def connect_to_database():
         return False
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Startup event handler."""
-    global db_connected, worker
-    logger.info("🚀 Starting AI Event Scraper API Server (railway_complete)")
-
-    # Try to connect to database (non-blocking)
-    await connect_to_database()
-
-    if db_connected:
-        logger.info("✅ Server started with database connection")
-    else:
-        logger.info("⚠️ Server started without database connection")
-
-    # Start continuous background refresh worker
-    if worker is None:
-        worker = BackgroundRefreshWorker()
-        worker.start()
-        logger.info("[worker] Background refresh worker started from railway_complete")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Shutdown event handler."""
-    global worker
-    # Stop background worker first
-    if worker is not None:
-        try:
-            await worker.stop()
-        except Exception as e:
-            logger.warning(f"Error stopping background worker: {e}")
-        worker = None
-
-    if db_connected and db_client is not None:
-        try:
-            db_client.close()
-            logger.info("✅ Database disconnected")
-        except Exception as e:
-            logger.error(f"❌ Error disconnecting from database: {e}")
-
-    logger.info("🛑 API Server shutdown complete")
 
 # ============================================================================
 # BASIC ENDPOINTS
@@ -282,7 +283,7 @@ async def get_events(
     limit: int = Query(10, ge=1, le=100, description="Number of events to return"),
     offset: int = Query(0, ge=0, description="Number of events to skip"),
     sort_by: str = Query("created_at", description="Field to sort by"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
     category: Optional[str] = Query(None, description="Filter by category"),
     city: Optional[str] = Query(None, description="Filter by city"),
     tags: Optional[str] = Query(None, description="Filter by tags (comma-separated)"),
@@ -717,7 +718,7 @@ async def get_trends(
 
 @app.get("/export")
 async def export_events(
-    format: str = Query("json", regex="^(json|csv)$", description="Export format"),
+    format: str = Query("json", pattern="^(json|csv)$", description="Export format"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum number of events to export"),
     category: Optional[str] = Query(None, description="Filter by category"),
     city: Optional[str] = Query(None, description="Filter by city")

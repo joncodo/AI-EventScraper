@@ -8,7 +8,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 
-from core.models import Event, Location, ContactInfo, EventSource
+from core.models import Event, ContactInfo, EventSource
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -32,14 +32,31 @@ class BaseScraper(ABC):
             'Connection': 'keep-alive',
         }
         
-        timeout = aiohttp.ClientTimeout(total=30)
-        self.session = aiohttp.ClientSession(headers=headers, timeout=timeout)
+        # Configure connector with SSL settings
+        connector = aiohttp.TCPConnector(
+            limit=10,
+            limit_per_host=5,
+            ssl=False,  # Disable SSL verification for scraping
+            enable_cleanup_closed=True
+        )
+        
+        timeout = aiohttp.ClientTimeout(total=30, connect=10, sock_read=20)
+        self.session = aiohttp.ClientSession(
+            headers=headers, 
+            timeout=timeout,
+            connector=connector
+        )
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         if self.session:
-            await self.session.close()
+            try:
+                await self.session.close()
+            except Exception as e:
+                logger.warning(f"Error closing session: {e}")
+            finally:
+                self.session = None
     
     @abstractmethod
     async def scrape_events(

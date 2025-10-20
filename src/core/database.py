@@ -69,7 +69,12 @@ class Database:
         
         for index_spec in indexes:
             try:
-                await collection.create_index(index_spec)
+                # Convert tuple to list for MongoDB create_index
+                if isinstance(index_spec, tuple):
+                    index_list = [index_spec]
+                else:
+                    index_list = index_spec
+                await collection.create_index(index_list)
                 logger.info(f"Created index: {index_spec}")
             except Exception as e:
                 logger.warning(f"Failed to create index {index_spec}: {e}")
