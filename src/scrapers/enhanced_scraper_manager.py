@@ -14,46 +14,11 @@ from core.database import db
 # Initialize logger after imports
 logger = logging.getLogger(__name__)
 
-# Try to import enhanced scrapers with fallbacks
-try:
-    from .enhanced_eventbrite_scraper import EnhancedEventbriteScraper
-    ENHANCED_EVENTBRITE_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Enhanced Eventbrite scraper not available: {e}")
-    ENHANCED_EVENTBRITE_AVAILABLE = False
-    # Create dummy class for fallback
-    class EnhancedEventbriteScraper:
-        def __init__(self):
-            self.platform_name = "eventbrite"
-        async def scrape_events(self, *args, **kwargs):
-            return []
-
-try:
-    from .rss_scraper import RSSEventScraper
-    from .api_scraper import APIEventScraper
-    from .local_events_scraper import LocalEventsScraper
-    ENHANCED_SCRAPERS_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Enhanced scrapers not available: {e}")
-    ENHANCED_SCRAPERS_AVAILABLE = False
-    # Create dummy classes for fallback
-    class RSSEventScraper:
-        def __init__(self):
-            self.platform_name = "rss_feeds"
-        async def scrape_events(self, *args, **kwargs):
-            return []
-    
-    class APIEventScraper:
-        def __init__(self):
-            self.platform_name = "api_feeds"
-        async def scrape_events(self, *args, **kwargs):
-            return []
-    
-    class LocalEventsScraper:
-        def __init__(self):
-            self.platform_name = "local_events"
-        async def scrape_events(self, *args, **kwargs):
-            return []
+# Import enhanced scrapers
+from .enhanced_eventbrite_scraper import EnhancedEventbriteScraper
+from .rss_scraper import RSSEventScraper
+from .api_scraper import APIEventScraper
+from .local_events_scraper import LocalEventsScraper
 
 
 class EnhancedScraperManager:
