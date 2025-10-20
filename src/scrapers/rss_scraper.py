@@ -51,30 +51,33 @@ class RSSEventScraper:
         self.platform_name = "rss_feeds"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # Curated list of reliable event RSS feeds that actually work
+        # Curated list of ACTUAL EVENT RSS feeds only
         self.event_rss_feeds = [
-            # === RELIABLE WORKING RSS FEEDS ===
-            # News feeds (for testing and general events)
-            "http://feeds.bbci.co.uk/news/rss.xml",
-            "https://feeds.npr.org/1001/rss.xml",  # NPR News
-            "https://rss.cnn.com/rss/edition.rss",  # CNN News
-            "https://feeds.reuters.com/reuters/topNews",  # Reuters News
+            # === REAL EVENT FEEDS ONLY ===
+            # Eventbrite event feeds (city-specific)
+            "https://www.eventbrite.com/rss/events/",  # General Eventbrite events
+            "https://www.eventbrite.com/rss/events/?location=new-york",  # NYC events
+            "https://www.eventbrite.com/rss/events/?location=los-angeles",  # LA events
+            "https://www.eventbrite.com/rss/events/?location=chicago",  # Chicago events
+            "https://www.eventbrite.com/rss/events/?location=san-francisco",  # SF events
             
-            # Tech and Business (often have events)
-            "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch
-            "https://feeds.feedburner.com/arstechnica/",  # Ars Technica
-            "https://feeds.feedburner.com/oreilly/radar",  # O'Reilly Radar
-            "https://feeds.feedburner.com/venturebeat/SZYF",  # VentureBeat
+            # Meetup event feeds
+            "https://www.meetup.com/events/rss/",  # General Meetup events
+            "https://www.meetup.com/events/rss/?location=new-york",  # NYC Meetup events
+            "https://www.meetup.com/events/rss/?location=los-angeles",  # LA Meetup events
             
-            # Event-specific feeds (verified working)
-            "https://www.eventbrite.com/rss",  # Eventbrite events
-            "https://www.meetup.com/events/rss/",  # Meetup events
+            # Conference and event aggregator feeds
+            "https://lanyrd.com/feeds/",  # Lanyrd events (if still active)
+            "https://www.eventful.com/rss/events",  # Eventful events
             
-            # Additional reliable feeds
-            "https://feeds.feedburner.com/oreilly/radar",  # O'Reilly
-            "https://feeds.feedburner.com/venturebeat/SZYF",  # VentureBeat
-            "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch (duplicate for reliability)
-            "https://feeds.feedburner.com/arstechnica/",  # Ars Technica (duplicate for reliability)
+            # Tech conference feeds
+            "https://conferences.oreilly.com/rss",  # O'Reilly conferences
+            "https://www.techcrunch.com/events/rss/",  # TechCrunch events
+            
+            # Local event feeds (city-specific)
+            "https://www.timeout.com/newyork/rss",  # TimeOut NYC events
+            "https://www.timeout.com/los-angeles/rss",  # TimeOut LA events
+            "https://www.timeout.com/chicago/rss",  # TimeOut Chicago events
         ]
         
         # iCal feeds (often more reliable than RSS)
@@ -344,6 +347,79 @@ class RSSEventScraper:
         
         return events
     
+    def _is_likely_event(self, title: str, description: str) -> bool:
+        """Check if the content is likely an actual event (not a blog post or news article)."""
+        title_lower = title.lower()
+        desc_lower = description.lower()
+        combined_text = f"{title_lower} {desc_lower}"
+        
+        # Keywords that indicate this is NOT an event
+        non_event_keywords = [
+            # Blog/article indicators
+            'faq', 'frequently asked questions', 'q&a',
+            'vs ', 'comparison', 'review', 'guide', 'tutorial',
+            'how to', 'what is', 'everything you need to know',
+            'top ', 'best ', 'list of', 'beginner guide',
+            'ultimate guide', 'marketing tools', 'ai tools',
+            'supplements', 'health', 'wellness', 'blockchain',
+            'cryptocurrency', 'nft', 'grammarly', 'prowritingaid',
+            'collagen', 'skin care', 'affiliate', 'commission',
+            
+            # News indicators
+            'breaking news', 'reports', 'announces', 'launches',
+            'acquires', 'merges', 'partnership', 'investment',
+            'funding', 'ipo', 'earnings', 'quarterly results',
+            
+            # Article indicators
+            'read more', 'continue reading', 'full article',
+            'blog post', 'opinion', 'analysis', 'commentary'
+        ]
+        
+        # Check for non-event keywords
+        for keyword in non_event_keywords:
+            if keyword in combined_text:
+                return False
+        
+        # Keywords that indicate this IS an event
+        event_keywords = [
+            'event', 'meeting', 'conference', 'workshop', 'seminar',
+            'meetup', 'networking', 'party', 'celebration', 'festival',
+            'convention', 'summit', 'expo', 'exhibition', 'show',
+            'concert', 'performance', 'theater', 'movie', 'film',
+            'class', 'course', 'training', 'session', 'webinar',
+            'tour', 'walk', 'run', 'race', 'competition', 'contest',
+            'auction', 'sale', 'market', 'fair', 'carnival',
+            'date:', 'time:', 'location:', 'venue:', 'address:',
+            'register', 'ticket', 'rsvp', 'attend', 'join us',
+            'happening', 'taking place', 'occurring', 'scheduled'
+        ]
+        
+        # Check for event keywords
+        for keyword in event_keywords:
+            if keyword in combined_text:
+                return True
+        
+        # If it's very long (likely an article), probably not an event
+        if len(description) > 1000:
+            return False
+        
+        # If it has a specific date/time pattern, likely an event
+        import re
+        date_patterns = [
+            r'\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\w*\s+\d{1,2}',
+            r'\b\d{1,2}/\d{1,2}/\d{2,4}',
+            r'\b\d{1,2}-\d{1,2}-\d{2,4}',
+            r'\b\d{1,2}:\d{2}\s*(am|pm)',
+            r'\b\d{1,2}:\d{2}',
+        ]
+        
+        for pattern in date_patterns:
+            if re.search(pattern, combined_text, re.IGNORECASE):
+                return True
+        
+        # Default to False if we can't determine
+        return False
+    
     async def _parse_rss_entry(self, entry, city: str, country: str, feed_url: str) -> Optional[Event]:
         """Parse an RSS entry into an Event object."""
         try:
@@ -359,6 +435,11 @@ class RSSEventScraper:
                 import re
                 description = re.sub(r'<[^>]+>', '', description)
                 description = description.strip()
+            
+            # Validate this is actually an event (not a blog post or news article)
+            if not self._is_likely_event(title, description):
+                logger.debug(f"Skipping non-event: {title[:50]}...")
+                return None
             
             # Extract link
             link = entry.link.strip() if entry.link else ''
