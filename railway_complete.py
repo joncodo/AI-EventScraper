@@ -16,7 +16,7 @@ import sys
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path as PathLib
-from typing import List, Optional, Dict, Any
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Query, Path
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -25,12 +25,17 @@ import uvicorn
 project_root = PathLib(__file__).parent
 src_path = project_root / "src"
 sys.path.insert(0, str(src_path))
+from worker.background_worker import BackgroundRefreshWorker  # noqa: E402
 
-# Configure logging
+# Configure logging (force override to ensure visibility in Railway runtime)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
 )
+logging.getLogger("uvicorn").setLevel(logging.INFO)
+logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
@@ -56,55 +61,47 @@ app_start_time = datetime.now()
 db_connected = False
 db_client = None
 db_database = None
+worker: BackgroundRefreshWorker | None = None
+
 
 def get_mongodb_uri():
     """Get MongoDB URI from Railway environment variables."""
-    # Railway provides MONGODB_URI directly
     mongodb_uri = os.getenv("MONGODB_URI")
-    
     if mongodb_uri:
         logger.info("✅ Found MONGODB_URI from Railway")
         return mongodb_uri
-    
-    # Fallback to prefixed environment variable
     mongodb_uri = os.getenv("EVENT_SCRAPER_MONGODB_URI")
     if mongodb_uri:
         logger.info("✅ Found EVENT_SCRAPER_MONGODB_URI")
         return mongodb_uri
-    
-    # Fallback to local development
     mongodb_uri = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     logger.info(f"⚠️ Using fallback MongoDB URI: {mongodb_uri}")
     return mongodb_uri
 
+
 async def connect_to_database():
     """Connect to MongoDB with proper error handling."""
     global db_connected, db_client, db_database
-    
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
-        
+
         mongodb_uri = get_mongodb_uri()
         database_name = os.getenv("MONGODB_DATABASE", "event_scraper")
-        
+
         logger.info(f"🔗 Connecting to MongoDB: {database_name}")
         logger.info(f"🔗 MongoDB URI: {mongodb_uri[:50]}...")
-        
-        # Create client
+
         db_client = AsyncIOMotorClient(mongodb_uri)
         db_database = db_client[database_name]
-        
-        # Test connection
+
         await db_client.admin.command('ping')
         logger.info("✅ Database connected successfully")
-        
-        # Test database access
+
         event_count = await db_database.events.count_documents({})
         logger.info(f"✅ Database accessible - {event_count} events found")
-        
+
         db_connected = True
         return True
-        
     except Exception as e:
         logger.error(f"❌ Database connection failed: {e}")
         db_connected = False
@@ -112,30 +109,47 @@ async def connect_to_database():
         db_database = None
         return False
 
+
 @app.on_event("startup")
 async def startup_event():
     """Startup event handler."""
-    global db_connected
-    logger.info("🚀 Starting AI Event Scraper API Server")
-    
+    global db_connected, worker
+    logger.info("🚀 Starting AI Event Scraper API Server (railway_complete)")
+
     # Try to connect to database (non-blocking)
     await connect_to_database()
-    
+
     if db_connected:
         logger.info("✅ Server started with database connection")
     else:
         logger.info("⚠️ Server started without database connection")
 
+    # Start continuous background refresh worker
+    if worker is None:
+        worker = BackgroundRefreshWorker()
+        worker.start()
+        logger.info("[worker] Background refresh worker started from railway_complete")
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Shutdown event handler."""
+    global worker
+    # Stop background worker first
+    if worker is not None:
+        try:
+            await worker.stop()
+        except Exception as e:
+            logger.warning(f"Error stopping background worker: {e}")
+        worker = None
+
     if db_connected and db_client is not None:
         try:
             db_client.close()
             logger.info("✅ Database disconnected")
         except Exception as e:
             logger.error(f"❌ Error disconnecting from database: {e}")
-    
+
     logger.info("🛑 API Server shutdown complete")
 
 # ============================================================================

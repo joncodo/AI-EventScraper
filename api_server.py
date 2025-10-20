@@ -38,11 +38,16 @@ from core.database import db  # noqa: E402
 from core.models import Location, ContactInfo, EventSource  # noqa: E402
 from worker.background_worker import BackgroundRefreshWorker  # noqa: E402
 
-# Configure logging
+# Configure logging (force to override uvicorn defaults in some hosts)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
 )
+# Ensure uvicorn loggers are visible alongside our app logs
+logging.getLogger("uvicorn").setLevel(logging.INFO)
+logging.getLogger("uvicorn.error").setLevel(logging.INFO)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
