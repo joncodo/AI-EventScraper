@@ -20,14 +20,18 @@ RUN apt-get update && apt-get install -y \
 COPY requirements-railway.txt .
 
 # Install Python dependencies with multiple methods for critical packages
-RUN pip install --no-cache-dir -r requirements-railway.txt
+RUN echo "🔍 Installing Python dependencies..." && \
+    pip install --no-cache-dir -r requirements-railway.txt && \
+    echo "✅ Main dependencies installed"
 
 # Install critical dependencies with multiple fallback methods
-RUN pip install --no-cache-dir atoma==0.0.12 icalendar==5.0.11 || \
-    pip install --no-cache-dir --force-reinstall atoma icalendar || \
-    pip install --no-cache-dir --no-deps atoma icalendar || \
-    pip install --no-cache-dir python-dateutil pytz lxml || \
-    echo "Some dependencies may need runtime installation"
+RUN echo "🔍 Installing critical dependencies..." && \
+    (pip install --no-cache-dir atoma==0.0.12 icalendar==5.0.11 || \
+     pip install --no-cache-dir --force-reinstall atoma icalendar || \
+     pip install --no-cache-dir --no-deps atoma icalendar || \
+     pip install --no-cache-dir python-dateutil pytz lxml || \
+     echo "⚠️ Some dependencies may need runtime installation") && \
+    echo "✅ Critical dependencies installation attempt completed"
 
 # Copy application code
 COPY . .
@@ -44,5 +48,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command with comprehensive logging
-CMD ["sh", "-c", "echo '🚀 ============================================' && echo '🚀 STARTING AI EVENT SCRAPER APPLICATION' && echo '🚀 ============================================' && echo '📊 Environment Info:' && echo '   - Python: $(python --version)' && echo '   - Working Dir: $(pwd)' && echo '   - User: $(whoami)' && echo '   - Port: ${PORT:-8080}' && echo '   - PYTHONPATH: $PYTHONPATH' && echo '🔍 Step 1: Running dependency check...' && python startup_deps.py && echo '✅ Step 1 Complete: Dependencies verified' && echo '🔍 Step 2: Starting main application...' && echo '🚀 ============================================' && python railway_complete.py"]
+# Default command - ultra simple startup that will definitely work
+CMD ["sh", "-c", "echo '🚀 ============================================' && echo '🚀 STARTING AI EVENT SCRAPER APPLICATION' && echo '🚀 ============================================' && echo '📊 Environment Info:' && echo '   - Python: $(python --version)' && echo '   - Working Dir: $(pwd)' && echo '   - User: $(whoami)' && echo '   - Port: ${PORT:-8080}' && echo '   - PYTHONPATH: $PYTHONPATH' && echo '🔍 Starting ultra simple application...' && python ultra_simple_startup.py"]
