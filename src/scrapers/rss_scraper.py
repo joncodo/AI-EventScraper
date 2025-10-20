@@ -57,14 +57,24 @@ class RSSEventScraper:
             # News feeds (for testing and general events)
             "http://feeds.bbci.co.uk/news/rss.xml",
             "https://feeds.npr.org/1001/rss.xml",  # NPR News
+            "https://rss.cnn.com/rss/edition.rss",  # CNN News
+            "https://feeds.reuters.com/reuters/topNews",  # Reuters News
             
             # Tech and Business (often have events)
             "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch
             "https://feeds.feedburner.com/arstechnica/",  # Ars Technica
+            "https://feeds.feedburner.com/oreilly/radar",  # O'Reilly Radar
+            "https://feeds.feedburner.com/venturebeat/SZYF",  # VentureBeat
             
             # Event-specific feeds (verified working)
             "https://www.eventbrite.com/rss",  # Eventbrite events
             "https://www.meetup.com/events/rss/",  # Meetup events
+            
+            # Additional reliable feeds
+            "https://feeds.feedburner.com/oreilly/radar",  # O'Reilly
+            "https://feeds.feedburner.com/venturebeat/SZYF",  # VentureBeat
+            "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch (duplicate for reliability)
+            "https://feeds.feedburner.com/arstechnica/",  # Ars Technica (duplicate for reliability)
         ]
         
         # iCal feeds (often more reliable than RSS)
