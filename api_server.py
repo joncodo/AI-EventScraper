@@ -36,6 +36,7 @@ import uvicorn  # noqa: E402
 
 from core.database import db  # noqa: E402
 from core.models import Location, ContactInfo, EventSource  # noqa: E402
+from worker.background_worker import BackgroundRefreshWorker  # noqa: E402
 
 # Configure logging
 logging.basicConfig(
@@ -149,6 +150,7 @@ class HealthResponse(BaseModel):
 
 # Global variables
 app_start_time = datetime.now()
+worker: BackgroundRefreshWorker | None = None
 
 # Dependency to get database connection
 async def get_database():
@@ -732,6 +734,10 @@ async def startup_event():
         await db.connect()
         logger.info("🚀 API Server started successfully")
         logger.info("📊 Connected to MongoDB")
+        # Start continuous background worker
+        global worker
+        worker = BackgroundRefreshWorker()
+        worker.start()
     except Exception as e:
         logger.warning(f"⚠️ Failed to connect to MongoDB on startup: {e}")
         logger.info("🚀 API Server started successfully (database connection will be retried)")
@@ -740,6 +746,15 @@ async def startup_event():
 async def shutdown_event():
     """Clean up database connection on shutdown"""
     try:
+        # Stop worker first to avoid new DB work
+        global worker
+        if worker is not None:
+            try:
+                await worker.stop()
+            except Exception as e:
+                logger.warning(f"Error stopping background worker: {e}")
+            worker = None
+
         await db.disconnect()
         logger.info("🛑 API Server shutdown complete")
     except Exception as e:

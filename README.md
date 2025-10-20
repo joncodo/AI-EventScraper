@@ -275,6 +275,27 @@ The service includes an hourly background job that refreshes popular locations a
 - Cloud (Render): configured as a cron job named `hourly-refresh` with schedule `0 * * * *` in `render.yaml`.
 - Cloud (Railway): add a cron service named `hourly-refresh` with schedule `0 * * * *` executing `python scripts/cron_hourly_refresh.py`. See `railway.json` example.
 
+### Continuous background worker (default on server start)
+
+The API server starts a continuous worker that scrapes and refreshes data nonstop within resource limits. It reuses the cron logic and includes exponential backoff on failures.
+
+Environment variables:
+
+```bash
+# Controls worker idle delay between passes (seconds)
+WORKER_LOOP_SECONDS=600
+
+# Caps exponential backoff after errors (seconds)
+WORKER_MAX_BACKOFF_SECONDS=900
+
+# Scraper tunables already used by the cron job
+CRON_CITY_CONCURRENCY=2
+CRON_TOP_CITIES_LIMIT=12
+CRON_FORCE_REFRESH_EVERY_HOURS=6
+```
+
+No extra process is needed—deploying the API will start the worker automatically.
+
 ## API Documentation
 
 Complete API documentation is available at:
