@@ -50,6 +50,9 @@ class EnhancedScraperManager:
         """Scrape events from all available sources with enhanced stealth."""
         all_events = []
         
+        logger.info(f"🚀 Enhanced scraper manager starting for {request.city}, {request.country}")
+        logger.info(f"📊 Available scrapers: {len(self.alternative_scrapers)} alternative, {len(self.enhanced_scrapers)} enhanced, {len(self.regular_scrapers)} regular")
+        
         # Create semaphore to limit concurrent requests (more conservative)
         semaphore = asyncio.Semaphore(3)  # Max 3 scrapers running at once
         

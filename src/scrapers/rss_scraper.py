@@ -11,21 +11,27 @@ from core.models import Event, Location, ContactInfo, EventSource
 logger = logging.getLogger(__name__)
 
 # Import required dependencies with fallback
+logger.info("🔍 Checking RSS scraper dependencies...")
+
 try:
     import feedparser
     FEEDPARSER_AVAILABLE = True
-except ImportError:
-    logger.warning("feedparser not available - RSS scraping will be disabled")
+    logger.info("✅ feedparser imported successfully")
+except ImportError as e:
+    logger.warning(f"❌ feedparser not available - RSS scraping will be disabled: {e}")
     FEEDPARSER_AVAILABLE = False
     feedparser = None
 
 try:
     import icalendar
     ICALENDAR_AVAILABLE = True
-except ImportError:
-    logger.warning("icalendar not available - iCal scraping will be disabled")
+    logger.info("✅ icalendar imported successfully")
+except ImportError as e:
+    logger.warning(f"❌ icalendar not available - iCal scraping will be disabled: {e}")
     ICALENDAR_AVAILABLE = False
     icalendar = None
+
+logger.info(f"📊 RSS scraper dependencies: feedparser={FEEDPARSER_AVAILABLE}, icalendar={ICALENDAR_AVAILABLE}")
 
 
 class RSSEventScraper:

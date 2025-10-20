@@ -20,11 +20,11 @@ class APIEventScraper:
         self.session: Optional[aiohttp.ClientSession] = None
         
         # API configurations
-        self.apis = {
+        self.api_configs = {
             'eventbrite': {
                 'base_url': 'https://www.eventbriteapi.com/v3',
                 'endpoint': '/events/search/',
-                'api_key': settings.eventbrite_api_key if hasattr(settings, 'eventbrite_api_key') else None,
+                'api_key': getattr(settings, 'eventbrite_api_key', None),
                 'enabled': True
             },
             'meetup': {
@@ -79,23 +79,41 @@ class APIEventScraper:
         """Scrape events from various APIs."""
         events = []
         
+        logger.info(f"🔍 API scraper starting for {city}, {country}")
+        logger.info(f"📊 Available API configs: {list(self.api_configs.keys())}")
+        
+        # Check if session is initialized
+        if not self.session:
+            logger.error("❌ API scraper session not initialized!")
+            return events
+        
         # Scrape from each API
-        for api_name, api_config in self.apis.items():
-            if not api_config['enabled'] or not api_config['api_key']:
-                logger.info(f"Skipping {api_name} API - not configured")
+        for api_name, api_config in self.api_configs.items():
+            logger.info(f"🔍 Checking {api_name} API...")
+            logger.info(f"📋 API config: enabled={api_config.get('enabled')}, has_key={bool(api_config.get('api_key'))}")
+            
+            if not api_config.get('enabled', False):
+                logger.info(f"⏭️ Skipping {api_name} API - disabled")
+                continue
+                
+            if not api_config.get('api_key'):
+                logger.info(f"⏭️ Skipping {api_name} API - not configured")
                 continue
             
             try:
+                logger.info(f"🚀 Scraping {api_name} API...")
                 api_events = await self._scrape_api(
                     api_name, api_config, city, country, radius_km, start_date, end_date
                 )
                 events.extend(api_events)
-                logger.info(f"API {api_name} found {len(api_events)} events")
+                logger.info(f"✅ API {api_name} found {len(api_events)} events")
             except Exception as e:
-                logger.error(f"Error scraping {api_name} API: {e}")
+                logger.error(f"❌ Error scraping {api_name} API: {e}")
+                import traceback
+                logger.error(f"📋 Traceback: {traceback.format_exc()}")
                 continue
         
-        logger.info(f"API scraper found {len(events)} total events")
+        logger.info(f"🎯 API scraper found {len(events)} total events")
         return events
     
     async def _scrape_api(

@@ -384,24 +384,36 @@ class LocalEventsScraper:
         """Scrape events from local APIs."""
         events = []
         
+        logger.info(f"🏛️ Local events scraper starting for {city}, {country}")
+        
+        # Check if session is initialized
+        if not self.session:
+            logger.error("❌ Local events scraper session not initialized!")
+            return events
+        
         # Filter APIs based on city
         relevant_apis = self._get_relevant_apis(city, country)
+        logger.info(f"📊 Found {len(relevant_apis)} relevant APIs for {city}")
         
         for api_key, api_config in relevant_apis.items():
             if not api_config['enabled']:
+                logger.info(f"⏭️ Skipping {api_config['name']} - disabled")
                 continue
             
             try:
+                logger.info(f"🔍 Scraping {api_config['name']}: {api_config.get('url', 'unknown')}")
                 api_events = await self._scrape_local_api(
                     api_key, api_config, city, country, start_date, end_date
                 )
                 events.extend(api_events)
-                logger.info(f"Local API {api_config['name']} found {len(api_events)} events")
+                logger.info(f"✅ Local API {api_config['name']} found {len(api_events)} events")
             except Exception as e:
-                logger.error(f"Error scraping {api_config['name']}: {e}")
+                logger.error(f"❌ Error scraping {api_config['name']}: {e}")
+                import traceback
+                logger.error(f"📋 Traceback: {traceback.format_exc()}")
                 continue
         
-        logger.info(f"Local events scraper found {len(events)} total events")
+        logger.info(f"🎯 Local events scraper found {len(events)} total events")
         return events
     
     def _get_relevant_apis(self, city: str, country: str) -> Dict[str, Dict[str, Any]]:
