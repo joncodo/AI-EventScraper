@@ -13,6 +13,9 @@ sys.path.insert(0, str(src_path))
 def main():
     """Ensure dependencies are installed before starting the main application."""
     print("🔍 Running startup dependency check...")
+    print(f"📊 Python version: {sys.version}")
+    print(f"📊 Working directory: {os.getcwd()}")
+    print(f"📊 Python path: {sys.path[:3]}...")
     
     try:
         from utils.dependency_installer import ensure_dependencies
@@ -20,13 +23,29 @@ def main():
         
         if success:
             print("✅ All critical dependencies are available!")
-            return 0
         else:
             print("⚠️ Some dependencies may not be available, but continuing...")
-            return 0  # Don't fail startup, let the app handle it
+        
+        # Test imports directly
+        print("🔍 Testing direct imports...")
+        try:
+            import feedparser
+            print("✅ feedparser import successful")
+        except ImportError as e:
+            print(f"❌ feedparser import failed: {e}")
+        
+        try:
+            import icalendar
+            print("✅ icalendar import successful")
+        except ImportError as e:
+            print(f"❌ icalendar import failed: {e}")
+        
+        return 0  # Don't fail startup, let the app handle it
             
     except Exception as e:
         print(f"❌ Dependency installer failed: {e}")
+        import traceback
+        print(f"📋 Traceback: {traceback.format_exc()}")
         print("⚠️ Continuing with startup anyway...")
         return 0  # Don't fail startup
 

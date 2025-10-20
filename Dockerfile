@@ -37,12 +37,12 @@ RUN useradd --create-home --shell /bin/bash app && \
     chown -R app:app /app
 USER app
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway uses PORT env var)
+EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:${PORT:-8000}/ping || exit 1
+# Health check with longer startup time
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+    CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - run startup deps check then main app
-CMD ["sh", "-c", "python startup_deps.py && python railway_complete.py"]
+# Default command - run startup deps check, test, then main app
+CMD ["sh", "-c", "python startup_deps.py && python test_startup.py && python railway_complete.py"]
