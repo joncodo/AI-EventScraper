@@ -53,14 +53,23 @@ class RSSEventScraper:
         
         # Comprehensive curated list of reliable event RSS feeds
         self.event_rss_feeds = [
-            # === WORKING PUBLIC RSS FEEDS ===
-            # BBC News (for testing)
+            # === RELIABLE WORKING RSS FEEDS ===
+            # News feeds (for testing and general events)
             "http://feeds.bbci.co.uk/news/rss.xml",
             "https://rss.cnn.com/rss/edition.rss",
+            "https://feeds.npr.org/1001/rss.xml",  # NPR News
+            "https://feeds.reuters.com/reuters/topNews",  # Reuters News
             
-            # Tech News (for testing)
+            # Tech and Business (often have events)
             "https://feeds.feedburner.com/oreilly/radar",
             "https://feeds.feedburner.com/venturebeat/SZYF",
+            "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch
+            "https://feeds.feedburner.com/arstechnica/",  # Ars Technica
+            
+            # Event-specific feeds
+            "https://www.eventbrite.com/rss",  # Eventbrite events
+            "https://www.meetup.com/events/rss/",  # Meetup events
+            "https://www.eventful.com/rss",  # Eventful events
             
             # === MAJOR UNIVERSITIES ===
             # Stanford University
@@ -356,8 +365,20 @@ class RSSEventScraper:
     
     async def __aenter__(self):
         """Async context manager entry."""
+        # Headers to mimic a real browser and avoid 403 errors
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+        
         self.session = aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=30)
+            timeout=aiohttp.ClientTimeout(total=30),
+            headers=headers
         )
         return self
     
@@ -418,13 +439,47 @@ class RSSEventScraper:
             try:
                 logger.info(f"Scraping RSS feed: {feed_url}")
                 
-                # Fetch RSS feed
-                async with self.session.get(feed_url) as response:
-                    if response.status != 200:
-                        logger.warning(f"RSS feed {feed_url} returned status {response.status}")
-                        continue
-                    
-                    content = await response.text()
+                # Add small delay to avoid rate limiting
+                await asyncio.sleep(0.5)
+                
+                # Fetch RSS feed with retry logic
+                max_retries = 2
+                for attempt in range(max_retries):
+                    try:
+                        async with self.session.get(feed_url) as response:
+                            if response.status == 200:
+                                content = await response.text()
+                                break
+                            elif response.status == 403:
+                                logger.warning(f"RSS feed {feed_url} returned 403 Forbidden - may be blocking automated requests")
+                                continue
+                            elif response.status == 404:
+                                logger.warning(f"RSS feed {feed_url} returned 404 Not Found - feed may not exist")
+                                continue
+                            else:
+                                logger.warning(f"RSS feed {feed_url} returned status {response.status}")
+                                if attempt < max_retries - 1:
+                                    await asyncio.sleep(1)  # Wait before retry
+                                    continue
+                                else:
+                                    continue
+                    except asyncio.TimeoutError:
+                        logger.warning(f"Timeout accessing RSS feed: {feed_url}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(1)
+                            continue
+                        else:
+                            continue
+                    except Exception as e:
+                        logger.warning(f"Error accessing RSS feed {feed_url}: {e}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(1)
+                            continue
+                        else:
+                            continue
+                else:
+                    # If we get here, all retries failed
+                    continue
                 
                 # Parse RSS feed with atoma
                 try:
