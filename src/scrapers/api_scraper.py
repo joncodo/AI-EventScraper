@@ -153,60 +153,59 @@ class APIEventScraper:
         events = []
         
         try:
-            # Build request parameters
-            params = {
-                'token': api_config['api_key'],
-                'q': f"{city} {country}",
-                'expand': 'venue,organizer',
-                'status': 'live',
-                'order_by': 'start_asc'
+            # Eventbrite API doesn't have a general search endpoint
+            # We need to use the user's events or organization events
+            # For now, let's try to get the user's own events as a fallback
+            
+            headers = {
+                'Authorization': f'Bearer {api_config["api_key"]}',
+                'Content-Type': 'application/json'
             }
             
-            if start_date:
-                params['start_date.range_start'] = start_date.isoformat()
-            if end_date:
-                params['start_date.range_end'] = end_date.isoformat()
+            # Try to get user's events first
+            try:
+                # Get user info first
+                user_url = "https://www.eventbriteapi.com/v3/users/me/"
+                async with self.session.get(user_url, headers=headers) as response:
+                    if response.status == 200:
+                        user_data = await response.json()
+                        user_id = user_data.get('id')
+                        
+                        if user_id:
+                            # Get user's events
+                            events_url = f"https://www.eventbriteapi.com/v3/users/{user_id}/events/"
+                            async with self.session.get(events_url, headers=headers) as events_response:
+                                if events_response.status == 200:
+                                    events_data = await events_response.json()
+                                    
+                                    # Parse events
+                                    for event_data in events_data.get('events', []):
+                                        try:
+                                            event = self._parse_eventbrite_event(event_data, city, country)
+                                            if event:
+                                                events.append(event)
+                                        except Exception as e:
+                                            logger.error(f"Error parsing Eventbrite event: {e}")
+                                            continue
+                                else:
+                                    logger.warning(f"Eventbrite user events API returned status {events_response.status}")
+                    else:
+                        logger.warning(f"Eventbrite user API returned status {response.status}")
+                        
+            except Exception as e:
+                logger.error(f"Error with Eventbrite user API: {e}")
             
-            # Try multiple possible endpoints
-            endpoints = [
-                "https://www.eventbriteapi.com/v3/events/search/",
-                "https://www.eventbriteapi.com/v3/events/search",
-                "https://www.eventbriteapi.com/v3/events/",
-            ]
-            
-            for url in endpoints:
-                try:
-                    async with self.session.get(url, params=params) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            
-                            # Parse events
-                            for event_data in data.get('events', []):
-                                try:
-                                    event = self._parse_eventbrite_event(event_data, city, country)
-                                    if event:
-                                        events.append(event)
-                                except Exception as e:
-                                    logger.error(f"Error parsing Eventbrite event: {e}")
-                                    continue
-                            break  # Success, exit the loop
-                        elif response.status == 404:
-                            logger.warning(f"Eventbrite API endpoint {url} not found (404)")
-                            continue  # Try next endpoint
-                        else:
-                            logger.warning(f"Eventbrite API returned status {response.status} for {url}")
-                            continue  # Try next endpoint
-                            
-                except Exception as e:
-                    logger.error(f"Error with Eventbrite API endpoint {url}: {e}")
-                    continue  # Try next endpoint
-            
+            # If no events found, log that we need a different approach
             if not events:
-                logger.warning("All Eventbrite API endpoints failed - API may have changed")
+                logger.info("Eventbrite API: No events found. Note: Eventbrite API requires specific user/organization access for event search.")
         
         except Exception as e:
             logger.error(f"Error scraping Eventbrite API: {e}")
+            logger.error(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            logger.error(f"❌ Traceback: {traceback.format_exc()}")
         
+        logger.info(f"✅ API eventbrite found {len(events)} events")
         return events
     
     async def _scrape_meetup_api(

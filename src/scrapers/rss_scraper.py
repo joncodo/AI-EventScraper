@@ -56,20 +56,15 @@ class RSSEventScraper:
             # === RELIABLE WORKING RSS FEEDS ===
             # News feeds (for testing and general events)
             "http://feeds.bbci.co.uk/news/rss.xml",
-            "https://rss.cnn.com/rss/edition.rss",
             "https://feeds.npr.org/1001/rss.xml",  # NPR News
-            "https://feeds.reuters.com/reuters/topNews",  # Reuters News
             
             # Tech and Business (often have events)
-            "https://feeds.feedburner.com/oreilly/radar",
-            "https://feeds.feedburner.com/venturebeat/SZYF",
             "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch
             "https://feeds.feedburner.com/arstechnica/",  # Ars Technica
             
             # Event-specific feeds (verified working)
             "https://www.eventbrite.com/rss",  # Eventbrite events
             "https://www.meetup.com/events/rss/",  # Meetup events
-            "https://www.eventful.com/rss",  # Eventful events
         ]
         
         # iCal feeds (often more reliable than RSS)
@@ -216,8 +211,9 @@ class RSSEventScraper:
                     logger.error(f"Error parsing RSS feed {feed_url}: {e}")
                     continue
                 
-                # Process each entry
-                for entry in feed.entries:
+                # Process each entry - handle both 'entries' and 'items' attributes
+                entries = getattr(feed, 'entries', None) or getattr(feed, 'items', [])
+                for entry in entries:
                     try:
                         event = await self._parse_rss_entry(entry, city, country, feed_url)
                         if event and self._is_event_in_date_range(event, start_date, end_date):
