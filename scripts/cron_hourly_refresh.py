@@ -28,7 +28,11 @@ sys.path.insert(0, str(src_path))
 
 from core.database import db  # noqa: E402
 from core.models import ScrapeRequest  # noqa: E402
-from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
+try:
+    from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
+except ImportError:
+    # Fallback to regular scraper manager if enhanced version fails
+    from scrapers.scraper_manager import scraper_manager as enhanced_scraper_manager  # noqa: E402
 
 
 logging.basicConfig(
