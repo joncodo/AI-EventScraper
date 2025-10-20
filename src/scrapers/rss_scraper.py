@@ -43,6 +43,15 @@ class RSSEventScraper:
         
         # Comprehensive curated list of reliable event RSS feeds
         self.event_rss_feeds = [
+            # === WORKING PUBLIC RSS FEEDS ===
+            # BBC News (for testing)
+            "http://feeds.bbci.co.uk/news/rss.xml",
+            "https://rss.cnn.com/rss/edition.rss",
+            
+            # Tech News (for testing)
+            "https://feeds.feedburner.com/oreilly/radar",
+            "https://feeds.feedburner.com/venturebeat/SZYF",
+            
             # === MAJOR UNIVERSITIES ===
             # Stanford University
             "https://events.stanford.edu/rss",
