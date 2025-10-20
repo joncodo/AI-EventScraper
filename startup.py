@@ -72,7 +72,7 @@ def test_imports():
         ('motor', 'Motor (MongoDB)'),
         ('pymongo', 'PyMongo'),
         ('aiohttp', 'aiohttp'),
-        ('beautifulsoup4', 'BeautifulSoup'),
+        ('bs4', 'BeautifulSoup'),
         ('pydantic', 'Pydantic'),
         ('openai', 'OpenAI'),
     ]
