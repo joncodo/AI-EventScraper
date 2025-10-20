@@ -21,7 +21,9 @@ async def _run_single_pass() -> None:
     # Reuse the same implementation as our scheduled job
     from scripts.cron_hourly_refresh import run_hourly_refresh
 
+    logger.info("[worker] Running single refresh pass")
     await run_hourly_refresh()
+    logger.info("[worker] Refresh pass completed")
 
 
 async def _refresh_loop(stop_event: asyncio.Event) -> None:
@@ -31,11 +33,12 @@ async def _refresh_loop(stop_event: asyncio.Event) -> None:
 
     while not stop_event.is_set():
         try:
+            logger.info("[worker] Starting refresh loop iteration")
             await _run_single_pass()
             # Successful pass: reset backoff
             backoff = 5
         except Exception as e:  # noqa: BLE001
-            logger.error(f"Background refresh pass failed: {e}")
+            logger.error(f"[worker] Refresh pass failed: {e}")
             # Exponential backoff up to cap
             await asyncio.sleep(backoff)
             backoff = min(backoff * 2, max_backoff)
@@ -44,6 +47,7 @@ async def _refresh_loop(stop_event: asyncio.Event) -> None:
         # Idle briefly before the next pass
         try:
             # Allow immediate wakeup on shutdown
+            logger.info(f"[worker] Sleeping {base_delay}s before next pass")
             await asyncio.wait_for(stop_event.wait(), timeout=max(0, base_delay))
         except asyncio.TimeoutError:
             pass
@@ -61,7 +65,7 @@ class BackgroundRefreshWorker:
             return
         self._stop_event = asyncio.Event()
         self._task = asyncio.create_task(_refresh_loop(self._stop_event))
-        logger.info("Background refresh worker started")
+        logger.info("[worker] Background refresh worker started")
 
     async def stop(self) -> None:
         if self._task is None or self._stop_event is None:
@@ -74,6 +78,6 @@ class BackgroundRefreshWorker:
         finally:
             self._task = None
             self._stop_event = None
-            logger.info("Background refresh worker stopped")
+            logger.info("[worker] Background refresh worker stopped")
 
 

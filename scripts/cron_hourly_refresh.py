@@ -112,6 +112,7 @@ def _popularity_score_from_text(text: str) -> int:
 async def refresh_city(scraper_manager: ScraperManager, city: str, country: str = "United States") -> int:
     """Scrape and upsert events for a single city. Returns number of saved/updated events."""
     try:
+        logger.info(f"[cron] Begin city refresh: city='{city}', country='{country}'")
         # Define the date window to fetch upcoming events
         start_date = datetime.utcnow()
         end_date = start_date + timedelta(days=60)
@@ -125,8 +126,9 @@ async def refresh_city(scraper_manager: ScraperManager, city: str, country: str 
         )
 
         events = await scraper_manager.scrape_all_events(request)
+        logger.info(f"[cron] City '{city}': scraped {len(events)} events (pre-dedup)")
         if not events:
-            logger.info(f"No events scraped for {city}.")
+            logger.info(f"[cron] City '{city}': no events scraped")
             return 0
 
         # Prioritize logging/popularity to monitor impact (saving remains full to ensure coverage)
@@ -143,26 +145,26 @@ async def refresh_city(scraper_manager: ScraperManager, city: str, country: str 
                 popular_events.append(ev)
 
         if popular_events:
-            logger.info(f"City {city}: identified {len(popular_events)} potentially popular events for priority visibility.")
+            logger.info(f"[cron] City '{city}': identified {len(popular_events)} potentially popular events")
 
         saved_ids = await scraper_manager.save_events_to_database(events)
-        logger.info(f"City {city}: saved/updated {len(saved_ids)} events.")
+        logger.info(f"[cron] City '{city}': saved/updated {len(saved_ids)} events")
         return len(saved_ids)
     except Exception as e:
-        logger.error(f"Error refreshing city {city}: {e}")
+        logger.error(f"[cron] Error refreshing city '{city}': {e}")
         return 0
 
 
 async def run_hourly_refresh():
     """Main entry for the hourly refresh job."""
-    logger.info("Starting hourly refresh job")
+    logger.info("[cron] Starting hourly refresh job")
 
     # Ensure DB connection
     await db.connect()
 
     # Resolve top cities, bias towards where users are likely to watch
     top_cities = await get_top_cities(limit=int(os.getenv("CRON_TOP_CITIES_LIMIT", "12")))
-    logger.info(f"Refreshing top cities: {top_cities}")
+    logger.info(f"[cron] Top cities to refresh: {top_cities}")
 
     scraper_manager = ScraperManager()
 
@@ -198,7 +200,7 @@ async def run_hourly_refresh():
             has_due = await _city_has_due_events(city_name, now_dt)
             cadence_ok = _city_cadence_ok(city_name, now_dt)
             if not has_due and not cadence_ok:
-                logger.info(f"Skipping {city_name}: no due events and cadence window not reached.")
+                logger.info(f"[cron] Skip city '{city_name}': no due events and cadence window not reached")
                 return 0
             return await refresh_city(scraper_manager, city_name)
 
@@ -212,7 +214,7 @@ async def run_hourly_refresh():
         else:
             total += int(r)
 
-    logger.info(f"Hourly refresh complete. Cities processed: {len(top_cities)}; total saved/updated events: {total}")
+    logger.info(f"[cron] Refresh complete. Cities processed: {len(top_cities)}; total saved/updated events: {total}")
 
     try:
         await db.disconnect()
