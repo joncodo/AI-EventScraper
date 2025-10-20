@@ -23,10 +23,10 @@ COPY requirements-railway.txt .
 RUN pip install --no-cache-dir -r requirements-railway.txt
 
 # Install critical dependencies with multiple fallback methods
-RUN pip install --no-cache-dir feedparser==6.0.10 icalendar==5.0.11 || \
-    pip install --no-cache-dir --force-reinstall feedparser icalendar || \
-    pip install --no-cache-dir --no-deps feedparser icalendar || \
-    pip install --no-cache-dir sgmllib3k python-dateutil pytz lxml || \
+RUN pip install --no-cache-dir atoma==0.0.12 icalendar==5.0.11 || \
+    pip install --no-cache-dir --force-reinstall atoma icalendar || \
+    pip install --no-cache-dir --no-deps atoma icalendar || \
+    pip install --no-cache-dir python-dateutil pytz lxml || \
     echo "Some dependencies may need runtime installation"
 
 # Copy application code
