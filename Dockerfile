@@ -48,5 +48,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - single comprehensive startup script
-CMD ["sh", "-c", "echo '🚀 ============================================' && echo '🚀 STARTING AI EVENT SCRAPER APPLICATION' && echo '🚀 ============================================' && echo '📊 Environment Info:' && echo '   - Python: $(python --version)' && echo '   - Working Dir: $(pwd)' && echo '   - User: $(whoami)' && echo '   - Port: ${PORT:-8080}' && echo '   - PYTHONPATH: $PYTHONPATH' && echo '🔍 Starting comprehensive startup script...' && python startup.py"]
+# Default command - basic test first
+CMD ["python", "test_basic.py"]
