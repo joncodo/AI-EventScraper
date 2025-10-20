@@ -45,6 +45,18 @@ async def lifespan(app: FastAPI):
     global db_connected, worker
     logger.info("🚀 Starting AI Event Scraper API Server (railway_complete)")
 
+    # Ensure critical dependencies are installed
+    try:
+        from utils.dependency_installer import ensure_dependencies
+        logger.info("🔍 Ensuring critical dependencies are installed...")
+        deps_success = ensure_dependencies()
+        if deps_success:
+            logger.info("✅ All critical dependencies are available")
+        else:
+            logger.warning("⚠️ Some dependencies may not be available")
+    except Exception as e:
+        logger.error(f"❌ Dependency installer failed: {e}")
+
     # Try to connect to database (non-blocking)
     await connect_to_database()
 

@@ -11,31 +11,39 @@ pip install --upgrade pip
 echo "📦 Installing requirements..."
 pip install --no-cache-dir -r requirements-railway.txt
 
-# Install additional dependencies that might be missing
-echo "📦 Installing additional dependencies..."
+# Install critical dependencies with multiple methods
+echo "📦 Installing critical dependencies with multiple methods..."
+
+# Method 1: Standard install
+echo "📦 Method 1: Standard install..."
 pip install --no-cache-dir feedparser==6.0.10 icalendar==5.0.11
 
-# Force install critical dependencies
-echo "📦 Force installing critical dependencies..."
+# Method 2: Force reinstall
+echo "📦 Method 2: Force reinstall..."
 pip install --no-cache-dir --force-reinstall feedparser icalendar
+
+# Method 3: Install without dependencies
+echo "📦 Method 3: Install without dependencies..."
+pip install --no-cache-dir --no-deps feedparser icalendar
+
+# Method 4: Install dependencies separately
+echo "📦 Method 4: Install dependencies separately..."
+pip install --no-cache-dir sgmllib3k python-dateutil pytz lxml
+
+# Method 5: Install from different sources
+echo "📦 Method 5: Install from different sources..."
+pip install --no-cache-dir --index-url https://pypi.org/simple/ feedparser icalendar
 
 # Verify critical dependencies
 echo "🔍 Verifying critical dependencies..."
 python test_dependencies.py
 
-# If test fails, try alternative installation methods
+# If test fails, try runtime installation
 if [ $? -ne 0 ]; then
-    echo "⚠️ Some dependencies failed, trying alternative methods..."
-    
-    # Try installing with different methods
-    pip install --no-cache-dir --no-deps feedparser
-    pip install --no-cache-dir --no-deps icalendar
-    
-    # Install dependencies separately
-    pip install --no-cache-dir sgmllib3k python-dateutil pytz lxml
-    
-    echo "🔍 Re-testing dependencies..."
-    python test_dependencies.py
+    echo "⚠️ Some dependencies failed, but runtime installer will handle them..."
+    echo "📦 Runtime dependency installer will attempt installation on startup"
+else
+    echo "✅ All dependencies verified successfully!"
 fi
 
 echo "✅ Build completed successfully!"

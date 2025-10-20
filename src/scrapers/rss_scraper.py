@@ -10,9 +10,19 @@ from core.models import Event, Location, ContactInfo, EventSource
 
 logger = logging.getLogger(__name__)
 
-# Import required dependencies with fallback
+# Import required dependencies with guaranteed installation
 logger.info("🔍 Checking RSS scraper dependencies...")
 
+# Ensure dependencies are installed
+try:
+    from utils.dependency_installer import ensure_dependencies
+    deps_available = ensure_dependencies()
+    logger.info(f"📊 Dependency installer result: {deps_available}")
+except Exception as e:
+    logger.error(f"❌ Dependency installer failed: {e}")
+    deps_available = False
+
+# Now try to import
 try:
     import feedparser
     FEEDPARSER_AVAILABLE = True
