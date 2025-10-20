@@ -499,7 +499,7 @@ async def search_events(
         
     except Exception as e:
         logger.error(f"Error searching events: {e}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return {"error": str(e), "events": [], "total": 0}
 
 @app.get("/events/random")
 async def get_random_events(limit: int = Query(5, ge=1, le=20)):
@@ -508,7 +508,7 @@ async def get_random_events(limit: int = Query(5, ge=1, le=20)):
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Get random events using the same pattern as /events
+        # Use the exact same approach as the working /events endpoint
         events = []
         async for event_doc in db_database.events.find({}).limit(limit):
             if '_id' in event_doc:
@@ -523,7 +523,7 @@ async def get_random_events(limit: int = Query(5, ge=1, le=20)):
         
     except Exception as e:
         logger.error(f"Error getting random events: {e}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return {"error": str(e), "events": [], "count": 0}
 
 @app.get("/events/recent")
 async def get_recent_events(
@@ -880,7 +880,7 @@ async def export_events(
         
     except Exception as e:
         logger.error(f"Error exporting events: {e}")
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        return {"error": str(e), "events": [], "count": 0}
 
 if __name__ == "__main__":
     # Railway sets PORT environment variable
