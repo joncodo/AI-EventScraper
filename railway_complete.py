@@ -43,8 +43,20 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events."""
     global db_connected, worker
+    
+    print("🚀 ============================================")
+    print("🚀 FASTAPI APPLICATION STARTUP")
+    print("🚀 ============================================")
     logger.info("🚀 Starting AI Event Scraper API Server (railway_complete)")
+    
+    print("📊 Environment Information:")
+    print(f"   - Python: {sys.version}")
+    print(f"   - Working Directory: {os.getcwd()}")
+    print(f"   - Port: {os.getenv('PORT', '8080')}")
+    print(f"   - Environment: {os.getenv('ENVIRONMENT', 'unknown')}")
+    print(f"   - MongoDB URI: {os.getenv('MONGODB_URI', 'NOT SET')[:30]}...")
 
+    print("\n🔍 Step 1: Final dependency verification...")
     # Ensure critical dependencies are installed
     try:
         from utils.dependency_installer import ensure_dependencies
@@ -52,42 +64,73 @@ async def lifespan(app: FastAPI):
         deps_success = ensure_dependencies()
         if deps_success:
             logger.info("✅ All critical dependencies are available")
+            print("✅ All critical dependencies verified")
         else:
             logger.warning("⚠️ Some dependencies may not be available")
+            print("⚠️ Some dependencies may be missing")
     except Exception as e:
         logger.error(f"❌ Dependency installer failed: {e}")
+        print(f"❌ Dependency verification failed: {e}")
 
+    print("\n🔍 Step 2: Database connection...")
     # Try to connect to database (non-blocking)
     await connect_to_database()
 
     if db_connected:
         logger.info("✅ Server started with database connection")
+        print("✅ Database connected successfully")
     else:
         logger.info("⚠️ Server started without database connection")
+        print("⚠️ Database connection failed - continuing without DB")
 
+    print("\n🔍 Step 3: Background worker initialization...")
     # Start continuous background refresh worker
     if worker is None:
-        worker = BackgroundRefreshWorker()
-        worker.start()
-        logger.info("[worker] Background refresh worker started from railway_complete")
+        try:
+            worker = BackgroundRefreshWorker()
+            worker.start()
+            logger.info("[worker] Background refresh worker started from railway_complete")
+            print("✅ Background worker started successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to start background worker: {e}")
+            print(f"❌ Background worker failed to start: {e}")
+            worker = None
+
+    print("\n✅ ============================================")
+    print("✅ FASTAPI APPLICATION STARTUP COMPLETE")
+    print("✅ ============================================")
+    logger.info("✅ FastAPI application startup completed successfully")
 
     yield
 
+    print("\n🛑 ============================================")
+    print("🛑 FASTAPI APPLICATION SHUTDOWN")
+    print("🛑 ============================================")
+    
     # Shutdown
     if worker is not None:
         try:
+            print("🛑 Stopping background worker...")
             await worker.stop()
+            print("✅ Background worker stopped")
         except Exception as e:
             logger.warning(f"Error stopping background worker: {e}")
+            print(f"⚠️ Error stopping background worker: {e}")
         worker = None
 
     if db_connected and db_client is not None:
         try:
+            print("🛑 Disconnecting from database...")
             db_client.close()
             logger.info("✅ Database disconnected")
+            print("✅ Database disconnected")
         except Exception as e:
             logger.error(f"❌ Error disconnecting from database: {e}")
+            print(f"❌ Error disconnecting from database: {e}")
 
+    print("✅ ============================================")
+    print("✅ FASTAPI APPLICATION SHUTDOWN COMPLETE")
+    print("✅ ============================================")
     logger.info("🛑 API Server shutdown complete")
 
 
@@ -136,27 +179,65 @@ def get_mongodb_uri():
 async def connect_to_database():
     """Connect to MongoDB with proper error handling."""
     global db_connected, db_client, db_database
+    
+    print("🔗 ============================================")
+    print("🔗 DATABASE CONNECTION")
+    print("🔗 ============================================")
+    
     try:
         from motor.motor_asyncio import AsyncIOMotorClient
 
         mongodb_uri = get_mongodb_uri()
         database_name = os.getenv("MONGODB_DATABASE", "event_scraper")
 
+        print(f"📊 Database Configuration:")
+        print(f"   - Database Name: {database_name}")
+        print(f"   - MongoDB URI: {mongodb_uri[:50]}...")
+        print(f"   - Connection Timeout: 30s")
+
         logger.info(f"🔗 Connecting to MongoDB: {database_name}")
         logger.info(f"🔗 MongoDB URI: {mongodb_uri[:50]}...")
 
+        print("🔍 Step 1: Creating MongoDB client...")
         db_client = AsyncIOMotorClient(mongodb_uri)
         db_database = db_client[database_name]
+        print("✅ MongoDB client created")
 
+        print("🔍 Step 2: Testing connection with ping...")
         await db_client.admin.command('ping')
         logger.info("✅ Database connected successfully")
+        print("✅ Database ping successful")
 
+        print("🔍 Step 3: Checking database accessibility...")
         event_count = await db_database.events.count_documents({})
         logger.info(f"✅ Database accessible - {event_count} events found")
+        print(f"✅ Database accessible - {event_count} events found")
+
+        print("🔍 Step 4: Creating database indexes...")
+        # Create indexes for better performance
+        await db_database.events.create_index("location.city")
+        await db_database.events.create_index("location.country")
+        await db_database.events.create_index("start_date")
+        await db_database.events.create_index("category")
+        await db_database.events.create_index("created_at")
+        await db_database.events.create_index("updated_at")
+        print("✅ Database indexes created")
 
         db_connected = True
+        print("✅ ============================================")
+        print("✅ DATABASE CONNECTION SUCCESSFUL")
+        print("✅ ============================================")
         return True
+        
     except Exception as e:
+        print(f"❌ ============================================")
+        print(f"❌ DATABASE CONNECTION FAILED")
+        print(f"❌ ============================================")
+        print(f"❌ Error: {e}")
+        import traceback
+        print(f"📋 Traceback: {traceback.format_exc()}")
+        print(f"❌ ============================================")
+        
         logger.error(f"❌ Database connection failed: {e}")
         db_connected = False
         db_client = None
@@ -796,13 +877,40 @@ if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
     host = "0.0.0.0"
     
+    print("🌐 ============================================")
+    print("🌐 STARTING UVICORN SERVER")
+    print("🌐 ============================================")
+    print(f"📊 Server Configuration:")
+    print(f"   - Host: {host}")
+    print(f"   - Port: {port}")
+    print(f"   - Environment: {os.getenv('ENVIRONMENT', 'unknown')}")
+    print(f"   - Log Level: info")
+    print(f"   - Access Log: enabled")
+    print(f"📚 API Documentation will be available at:")
+    print(f"   - Swagger UI: http://{host}:{port}/docs")
+    print(f"   - ReDoc: http://{host}:{port}/redoc")
+    print(f"   - OpenAPI JSON: http://{host}:{port}/openapi.json")
+    print(f"🔍 Health Check: http://{host}:{port}/ping")
+    print("🌐 ============================================")
+    
     logger.info(f"🌐 Starting Railway Complete API on {host}:{port}")
     logger.info(f"📚 Docs will be available at http://{host}:{port}/docs")
     
-    uvicorn.run(
-        app, 
-        host=host, 
-        port=port,
-        log_level="info",
-        access_log=True
-    )
+    try:
+        uvicorn.run(
+            app, 
+            host=host, 
+            port=port,
+            log_level="info",
+            access_log=True
+        )
+    except Exception as e:
+        print(f"❌ ============================================")
+        print(f"❌ SERVER STARTUP FAILED")
+        print(f"❌ ============================================")
+        print(f"❌ Error: {e}")
+        import traceback
+        print(f"📋 Traceback: {traceback.format_exc()}")
+        print(f"❌ ============================================")
+        logger.error(f"❌ Server startup failed: {e}")
+        raise

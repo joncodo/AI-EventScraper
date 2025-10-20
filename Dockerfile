@@ -44,5 +44,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - start main app directly with dependency check
-CMD ["sh", "-c", "echo 'Starting application...' && python startup_deps.py && echo 'Dependencies OK, starting main app...' && python railway_complete.py"]
+# Default command with comprehensive logging
+CMD ["sh", "-c", "echo '🚀 ============================================' && echo '🚀 STARTING AI EVENT SCRAPER APPLICATION' && echo '🚀 ============================================' && echo '📊 Environment Info:' && echo '   - Python: $(python --version)' && echo '   - Working Dir: $(pwd)' && echo '   - User: $(whoami)' && echo '   - Port: ${PORT:-8080}' && echo '   - PYTHONPATH: $PYTHONPATH' && echo '🔍 Step 1: Running dependency check...' && python startup_deps.py && echo '✅ Step 1 Complete: Dependencies verified' && echo '🔍 Step 2: Starting main application...' && echo '🚀 ============================================' && python railway_complete.py"]
