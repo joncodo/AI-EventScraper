@@ -37,7 +37,7 @@ def test_imports():
     
     # Test optional imports
     optional_imports = [
-        ("feedparser", "RSS Parser"),
+        ("atoma", "RSS Parser"),
         ("icalendar", "iCal Parser"),
         ("selenium", "Selenium"),
     ]

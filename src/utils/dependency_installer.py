@@ -9,9 +9,8 @@ logger = logging.getLogger(__name__)
 
 # Critical dependencies that must be available
 CRITICAL_DEPENDENCIES = [
-    ("feedparser", "6.0.10"),
+    ("atoma", "0.0.12"),
     ("icalendar", "5.0.11"),
-    ("sgmllib3k", "1.0.0"),
     ("dateutil", "2.8.0"),  # python-dateutil imports as dateutil
     ("pytz", "2023.3"),
     ("lxml", "4.9.0"),

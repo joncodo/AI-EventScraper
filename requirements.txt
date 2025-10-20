@@ -29,7 +29,6 @@ geopy==2.4.1
 python-dateutil==2.8.2
 
 # RSS and iCal parsing (CRITICAL)
-feedparser==6.0.10
+atoma==0.0.12
 icalendar==5.0.11
-sgmllib3k==1.0.0
 pytz==2023.3

@@ -29,10 +29,10 @@ def main():
         # Test imports directly
         print("🔍 Testing direct imports...")
         try:
-            import feedparser
-            print("✅ feedparser import successful")
+            import atoma
+            print("✅ atoma import successful")
         except ImportError as e:
-            print(f"❌ feedparser import failed: {e}")
+            print(f"❌ atoma import failed: {e}")
         
         try:
             import icalendar

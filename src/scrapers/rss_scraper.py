@@ -24,13 +24,13 @@ except Exception as e:
 
 # Now try to import
 try:
-    import feedparser
-    FEEDPARSER_AVAILABLE = True
-    logger.info("✅ feedparser imported successfully")
+    import atoma
+    ATOMA_AVAILABLE = True
+    logger.info("✅ atoma imported successfully")
 except ImportError as e:
-    logger.warning(f"❌ feedparser not available - RSS scraping will be disabled: {e}")
-    FEEDPARSER_AVAILABLE = False
-    feedparser = None
+    logger.warning(f"❌ atoma not available - RSS scraping will be disabled: {e}")
+    ATOMA_AVAILABLE = False
+    atoma = None
 
 try:
     import icalendar
@@ -41,7 +41,7 @@ except ImportError as e:
     ICALENDAR_AVAILABLE = False
     icalendar = None
 
-logger.info(f"📊 RSS scraper dependencies: feedparser={FEEDPARSER_AVAILABLE}, icalendar={ICALENDAR_AVAILABLE}")
+logger.info(f"📊 RSS scraper dependencies: atoma={ATOMA_AVAILABLE}, icalendar={ICALENDAR_AVAILABLE}")
 
 
 class RSSEventScraper:
@@ -379,16 +379,16 @@ class RSSEventScraper:
         events = []
         
         # Check if dependencies are available
-        if not FEEDPARSER_AVAILABLE and not ICALENDAR_AVAILABLE:
-            logger.warning("Neither feedparser nor icalendar available - RSS scraper disabled")
+        if not ATOMA_AVAILABLE and not ICALENDAR_AVAILABLE:
+            logger.warning("Neither atoma nor icalendar available - RSS scraper disabled")
             return events
         
         # Scrape RSS feeds if available
-        if FEEDPARSER_AVAILABLE:
+        if ATOMA_AVAILABLE:
             rss_events = await self._scrape_rss_feeds(city, country, start_date, end_date)
             events.extend(rss_events)
         else:
-            logger.info("RSS scraping disabled - feedparser not available")
+            logger.info("RSS scraping disabled - atoma not available")
         
         # Scrape iCal feeds if available
         if ICALENDAR_AVAILABLE:
@@ -410,8 +410,8 @@ class RSSEventScraper:
         """Scrape events from RSS feeds."""
         events = []
         
-        if not FEEDPARSER_AVAILABLE:
-            logger.warning("feedparser not available - RSS scraping disabled")
+        if not ATOMA_AVAILABLE:
+            logger.warning("atoma not available - RSS scraping disabled")
             return events
         
         for feed_url in self.event_rss_feeds:
@@ -426,15 +426,19 @@ class RSSEventScraper:
                     
                     content = await response.text()
                 
-                # Parse RSS feed
-                feed = feedparser.parse(content)
+                # Parse RSS feed with atoma
+                try:
+                    feed = atoma.parse_rss_bytes(content.encode('utf-8'))
+                except Exception as e:
+                    logger.warning(f"Failed to parse RSS feed {feed_url}: {e}")
+                    continue
                 
-                if not feed.entries:
+                if not feed.items:
                     logger.info(f"No entries found in RSS feed: {feed_url}")
                     continue
                 
                 # Process each entry
-                for entry in feed.entries:
+                for entry in feed.items:
                     try:
                         event = await self._parse_rss_entry(entry, city, country, feed_url)
                         if event and self._is_event_in_date_range(event, start_date, end_date):
@@ -502,12 +506,12 @@ class RSSEventScraper:
         """Parse an RSS entry into an Event object."""
         try:
             # Extract title
-            title = entry.get('title', '').strip()
+            title = entry.title.strip() if entry.title else ''
             if not title:
                 return None
             
             # Extract description
-            description = entry.get('description', '').strip()
+            description = entry.description.strip() if entry.description else ''
             if description:
                 # Clean HTML from description
                 from bs4 import BeautifulSoup
@@ -515,16 +519,16 @@ class RSSEventScraper:
                 description = soup.get_text().strip()
             
             # Extract link
-            link = entry.get('link', '')
+            link = entry.link if entry.link else ''
             if not link:
                 return None
             
             # Extract date
             start_date = None
-            if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                start_date = datetime(*entry.published_parsed[:6])
-            elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
-                start_date = datetime(*entry.updated_parsed[:6])
+            if entry.pub_date:
+                start_date = entry.pub_date
+            elif entry.last_build_date:
+                start_date = entry.last_build_date
             
             if not start_date:
                 # Try to parse date from title or description
@@ -559,7 +563,7 @@ class RSSEventScraper:
                 platform=self.platform_name,
                 url=link,
                 scraped_at=datetime.utcnow(),
-                source_id=entry.get('id', link)
+                source_id=entry.guid if entry.guid else link
             )
             
             # Create event
