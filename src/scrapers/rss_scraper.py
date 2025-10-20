@@ -402,7 +402,7 @@ class RSSEventScraper:
         logger.info(f"🔍 Starting RSS/iCal scraping for {city}, {country}")
         logger.info(f"📅 Date range: {start_date} to {end_date}")
         logger.info(f"📍 Radius: {radius_km}km")
-        logger.info(f"📊 Available feeds: {len(self.event_rss_feeds)} RSS, {len(self.event_ical_feeds)} iCal")
+        logger.info(f"📊 Available feeds: {len(self.event_rss_feeds)} RSS, {len(self.ical_feeds)} iCal")
         
         # Check if dependencies are available
         if not ATOMA_AVAILABLE and not ICALENDAR_AVAILABLE:
@@ -420,7 +420,7 @@ class RSSEventScraper:
         
         # Scrape iCal feeds if available
         if ICALENDAR_AVAILABLE:
-            logger.info(f"🚀 Starting iCal scraping with {len(self.event_ical_feeds)} feeds...")
+            logger.info(f"🚀 Starting iCal scraping with {len(self.ical_feeds)} feeds...")
             ical_events = await self._scrape_ical_feeds(city, country, start_date, end_date)
             events.extend(ical_events)
             logger.info(f"✅ iCal scraping completed: {len(ical_events)} events found")
