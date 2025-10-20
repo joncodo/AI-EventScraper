@@ -108,7 +108,7 @@ def test_python_modules():
         ("motor", "MongoDB Async Driver"),
         ("pymongo", "MongoDB Driver"),
         ("aiohttp", "Async HTTP Client"),
-        ("beautifulsoup4", "HTML Parser"),
+        ("bs4", "HTML Parser (BeautifulSoup)"),
         ("fake_useragent", "User-Agent Generator"),
         ("pydantic", "Data Validation"),
         ("pydantic_settings", "Settings Management"),
