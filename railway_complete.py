@@ -469,17 +469,12 @@ async def search_events(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Build search query with proper regex escaping
-        import re
-        escaped_query = re.escape(q)
-        
+        # Simple search query for now
         search_query = {
             "$or": [
-                {"title": {"$regex": escaped_query, "$options": "i"}},
-                {"description": {"$regex": escaped_query, "$options": "i"}},
-                {"tags": {"$regex": escaped_query, "$options": "i"}},
-                {"location.city": {"$regex": escaped_query, "$options": "i"}},
-                {"category": {"$regex": escaped_query, "$options": "i"}}
+                {"title": {"$regex": q, "$options": "i"}},
+                {"description": {"$regex": q, "$options": "i"}},
+                {"category": {"$regex": q, "$options": "i"}}
             ]
         }
         
@@ -513,23 +508,9 @@ async def get_random_events(limit: int = Query(5, ge=1, le=20)):
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Get random events using simple find with skip
-        # First get total count
-        total_count = await db_database.events.count_documents({})
-        
-        if total_count == 0:
-            return {
-                "events": [],
-                "count": 0,
-                "database_connected": True
-            }
-        
-        # Get random events by skipping a random number
-        import random
-        random_skip = random.randint(0, max(0, total_count - limit))
-        
+        # Simple approach: just get the first few events for now
         events = []
-        async for event_doc in db_database.events.find({}).skip(random_skip).limit(limit):
+        async for event_doc in db_database.events.find({}).limit(limit):
             if '_id' in event_doc:
                 event_doc['_id'] = str(event_doc['_id'])
             events.append(event_doc)
