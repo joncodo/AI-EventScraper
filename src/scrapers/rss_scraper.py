@@ -51,7 +51,7 @@ class RSSEventScraper:
         self.platform_name = "rss_feeds"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # Comprehensive curated list of reliable event RSS feeds
+        # Curated list of reliable event RSS feeds that actually work
         self.event_rss_feeds = [
             # === RELIABLE WORKING RSS FEEDS ===
             # News feeds (for testing and general events)
@@ -66,301 +66,15 @@ class RSSEventScraper:
             "https://feeds.feedburner.com/TechCrunch/",  # TechCrunch
             "https://feeds.feedburner.com/arstechnica/",  # Ars Technica
             
-            # Event-specific feeds
+            # Event-specific feeds (verified working)
             "https://www.eventbrite.com/rss",  # Eventbrite events
             "https://www.meetup.com/events/rss/",  # Meetup events
             "https://www.eventful.com/rss",  # Eventful events
-            
-            # === MAJOR UNIVERSITIES ===
-            # Stanford University
-            "https://events.stanford.edu/rss",
-            "https://events.stanford.edu/calendar.ics",
-            
-            # UC Berkeley
-            "https://events.berkeley.edu/rss",
-            "https://events.berkeley.edu/calendar.ics",
-            
-            # MIT
-            "https://events.mit.edu/rss",
-            "https://events.mit.edu/calendar.ics",
-            
-            # Harvard University
-            "https://events.harvard.edu/rss",
-            "https://events.harvard.edu/calendar.ics",
-            
-            # Yale University
-            "https://events.yale.edu/rss",
-            "https://events.yale.edu/calendar.ics",
-            
-            # Princeton University
-            "https://events.princeton.edu/rss",
-            "https://events.princeton.edu/calendar.ics",
-            
-            # Columbia University
-            "https://events.columbia.edu/rss",
-            "https://events.columbia.edu/calendar.ics",
-            
-            # University of Chicago
-            "https://events.uchicago.edu/rss",
-            "https://events.uchicago.edu/calendar.ics",
-            
-            # UCLA
-            "https://events.ucla.edu/rss",
-            "https://events.ucla.edu/calendar.ics",
-            
-            # University of Washington
-            "https://events.washington.edu/rss",
-            "https://events.washington.edu/calendar.ics",
-            
-            # === MAJOR CITIES ===
-            # San Francisco
-            "https://www.sf.gov/rss/events",
-            "https://sf.gov/api/events/feed",
-            "https://www.sf.gov/events/feed",
-            
-            # New York City
-            "https://www.nyc.gov/rss/events",
-            "https://www1.nyc.gov/api/events/feed",
-            "https://www1.nyc.gov/events/feed",
-            
-            # Chicago
-            "https://www.chicago.gov/rss/events",
-            "https://www.chicago.gov/api/events/feed",
-            "https://www.chicago.gov/events/feed",
-            
-            # Los Angeles
-            "https://www.lacity.org/rss/events",
-            "https://www.lacity.org/api/events/feed",
-            "https://www.lacity.org/events/feed",
-            
-            # Boston
-            "https://www.boston.gov/rss/events",
-            "https://www.boston.gov/api/events/feed",
-            "https://www.boston.gov/events/feed",
-            
-            # Seattle
-            "https://www.seattle.gov/rss/events",
-            "https://www.seattle.gov/api/events/feed",
-            "https://www.seattle.gov/events/feed",
-            
-            # Austin
-            "https://www.austintexas.gov/rss/events",
-            "https://www.austintexas.gov/api/events/feed",
-            "https://www.austintexas.gov/events/feed",
-            
-            # Denver
-            "https://www.denvergov.org/rss/events",
-            "https://www.denvergov.org/api/events/feed",
-            "https://www.denvergov.org/events/feed",
-            
-            # Portland
-            "https://www.portlandoregon.gov/rss/events",
-            "https://www.portlandoregon.gov/api/events/feed",
-            "https://www.portlandoregon.gov/events/feed",
-            
-            # === MAJOR MUSEUMS & CULTURAL INSTITUTIONS ===
-            # Metropolitan Museum of Art
-            "https://www.metmuseum.org/rss/events",
-            "https://www.metmuseum.org/api/events/feed",
-            "https://www.metmuseum.org/events/feed",
-            
-            # Museum of Modern Art (MoMA)
-            "https://www.moma.org/rss/events",
-            "https://www.moma.org/api/events/feed",
-            "https://www.moma.org/events/feed",
-            
-            # SFMOMA
-            "https://www.sfmoma.org/rss/events",
-            "https://www.sfmoma.org/api/events/feed",
-            "https://www.sfmoma.org/events/feed",
-            
-            # Getty Museum
-            "https://www.getty.edu/rss/events",
-            "https://www.getty.edu/api/events/feed",
-            "https://www.getty.edu/events/feed",
-            
-            # Smithsonian Institution
-            "https://www.si.edu/rss/events",
-            "https://www.si.edu/api/events/feed",
-            "https://www.si.edu/events/feed",
-            
-            # Guggenheim Museum
-            "https://www.guggenheim.org/rss/events",
-            "https://www.guggenheim.org/api/events/feed",
-            "https://www.guggenheim.org/events/feed",
-            
-            # Whitney Museum
-            "https://whitney.org/rss/events",
-            "https://whitney.org/api/events/feed",
-            "https://whitney.org/events/feed",
-            
-            # Art Institute of Chicago
-            "https://www.artic.edu/rss/events",
-            "https://www.artic.edu/api/events/feed",
-            "https://www.artic.edu/events/feed",
-            
-            # Los Angeles County Museum of Art
-            "https://www.lacma.org/rss/events",
-            "https://www.lacma.org/api/events/feed",
-            "https://www.lacma.org/events/feed",
-            
-            # === PERFORMING ARTS CENTERS ===
-            # Lincoln Center
-            "https://www.lincolncenter.org/rss/events",
-            "https://www.lincolncenter.org/api/events/feed",
-            "https://www.lincolncenter.org/events/feed",
-            
-            # Kennedy Center
-            "https://www.kennedy-center.org/rss/events",
-            "https://www.kennedy-center.org/api/events/feed",
-            "https://www.kennedy-center.org/events/feed",
-            
-            # Carnegie Hall
-            "https://www.carnegiehall.org/rss/events",
-            "https://www.carnegiehall.org/api/events/feed",
-            "https://www.carnegiehall.org/events/feed",
-            
-            # San Francisco Symphony
-            "https://www.sfsymphony.org/rss/events",
-            "https://www.sfsymphony.org/api/events/feed",
-            "https://www.sfsymphony.org/events/feed",
-            
-            # === CONFERENCE & TECH EVENTS ===
-            # O'Reilly Conferences
-            "https://conferences.oreilly.com/rss",
-            "https://conferences.oreilly.com/events/feed",
-            
-            # Linux Foundation Events
-            "https://events.linuxfoundation.org/rss",
-            "https://events.linuxfoundation.org/events/feed",
-            
-            # TechCrunch Events
-            "https://www.techcrunch.com/events/rss",
-            "https://www.techcrunch.com/events/feed",
-            
-            # Google I/O
-            "https://events.google.com/io/rss",
-            "https://events.google.com/io/events/feed",
-            
-            # Microsoft Build
-            "https://events.microsoft.com/build/rss",
-            "https://events.microsoft.com/build/events/feed",
-            
-            # Apple WWDC
-            "https://developer.apple.com/wwdc/rss",
-            "https://developer.apple.com/wwdc/events/feed",
-            
-            # === LOCAL EVENT AGGREGATORS ===
-            # Eventbrite (official RSS)
-            "https://www.eventbrite.com/rss",
-            "https://www.eventbrite.com/events/feed",
-            
-            # Meetup (official RSS)
-            "https://www.meetup.com/rss",
-            "https://www.meetup.com/events/feed",
-            
-            # CitySpark (major aggregator)
-            "https://www.cityspark.com/eventlistings/feed",
-            "https://www.cityspark.com/events/feed",
-            
-            # Eventful
-            "https://eventful.com/events/feed",
-            "https://eventful.com/rss",
-            
-            # Zvents
-            "https://www.zvents.com/events/feed",
-            "https://www.zvents.com/rss",
-            
-            # === LOCAL NEWS & CULTURE ===
-            # New York Magazine (Vulture)
-            "https://www.vulture.com/rss",
-            "https://www.vulture.com/events/feed",
-            
-            # Village Voice
-            "https://www.villagevoice.com/rss",
-            "https://www.villagevoice.com/events/feed",
-            
-            # Time Out (major cities)
-            "https://www.timeout.com/newyork/rss",
-            "https://www.timeout.com/san-francisco/rss",
-            "https://www.timeout.com/chicago/rss",
-            "https://www.timeout.com/los-angeles/rss",
-            "https://www.timeout.com/boston/rss",
-            "https://www.timeout.com/seattle/rss",
-            
-            # Thrillist (events and activities)
-            "https://www.thrillist.com/rss",
-            "https://www.thrillist.com/events/feed",
-            
-            # === SPECIALIZED EVENT SOURCES ===
-            # Event Marketer
-            "https://www.eventmarketer.com/rss",
-            "https://www.eventmarketer.com/events/feed",
-            
-            # BizBash
-            "https://www.bizbash.com/rss",
-            "https://www.bizbash.com/events/feed",
-            
-            # Smart Meetings
-            "https://www.smartmeetings.com/rss",
-            "https://www.smartmeetings.com/events/feed",
-            
-            # === FESTIVAL & OUTDOOR EVENTS ===
-            # FestivalNet
-            "https://www.festivalnet.com/rss",
-            "https://www.festivalnet.com/events/feed",
-            
-            # Eventful Festivals
-            "https://eventful.com/festivals/feed",
-            "https://eventful.com/outdoor-events/feed",
         ]
         
         # iCal feeds (often more reliable than RSS)
         self.ical_feeds = [
-            # === MAJOR UNIVERSITIES (iCal) ===
-            "https://events.stanford.edu/calendar.ics",
-            "https://events.berkeley.edu/calendar.ics",
-            "https://events.mit.edu/calendar.ics",
-            "https://events.harvard.edu/calendar.ics",
-            "https://events.yale.edu/calendar.ics",
-            "https://events.princeton.edu/calendar.ics",
-            "https://events.columbia.edu/calendar.ics",
-            "https://events.uchicago.edu/calendar.ics",
-            "https://events.ucla.edu/calendar.ics",
-            "https://events.washington.edu/calendar.ics",
-            
-            # === MAJOR CITIES (iCal) ===
-            "https://www.sf.gov/events/calendar.ics",
-            "https://www.nyc.gov/events/calendar.ics",
-            "https://www.chicago.gov/events/calendar.ics",
-            "https://www.lacity.org/events/calendar.ics",
-            "https://www.boston.gov/events/calendar.ics",
-            "https://www.seattle.gov/events/calendar.ics",
-            "https://www.austintexas.gov/events/calendar.ics",
-            "https://www.denvergov.org/events/calendar.ics",
-            "https://www.portlandoregon.gov/events/calendar.ics",
-            
-            # === MUSEUMS & CULTURAL (iCal) ===
-            "https://www.metmuseum.org/events/calendar.ics",
-            "https://www.moma.org/events/calendar.ics",
-            "https://www.sfmoma.org/events/calendar.ics",
-            "https://www.getty.edu/events/calendar.ics",
-            "https://www.si.edu/events/calendar.ics",
-            "https://www.guggenheim.org/events/calendar.ics",
-            "https://whitney.org/events/calendar.ics",
-            "https://www.artic.edu/events/calendar.ics",
-            "https://www.lacma.org/events/calendar.ics",
-            
-            # === PERFORMING ARTS (iCal) ===
-            "https://www.lincolncenter.org/events/calendar.ics",
-            "https://www.kennedy-center.org/events/calendar.ics",
-            "https://www.carnegiehall.org/events/calendar.ics",
-            "https://www.sfsymphony.org/events/calendar.ics",
-            
-            # === PUBLIC CALENDARS ===
-            "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",  # US Holidays
-            "https://calendar.google.com/calendar/ical/calendar%40sfmoma.org/public/basic.ics",  # SFMOMA
-            "https://calendar.google.com/calendar/ical/events%40metmuseum.org/public/basic.ics",  # Met Museum
+            # Empty for now - will add reliable iCal feeds later
         ]
     
     async def __aenter__(self):
@@ -377,8 +91,9 @@ class RSSEventScraper:
         }
         
         self.session = aiohttp.ClientSession(
+            headers=headers,
             timeout=aiohttp.ClientTimeout(total=30),
-            headers=headers
+            connector=aiohttp.TCPConnector(limit=10, limit_per_host=5)
         )
         return self
     
@@ -498,15 +213,11 @@ class RSSEventScraper:
                 try:
                     feed = atoma.parse_rss_bytes(content.encode('utf-8'))
                 except Exception as e:
-                    logger.warning(f"Failed to parse RSS feed {feed_url}: {e}")
-                    continue
-                
-                if not feed.items:
-                    logger.info(f"No entries found in RSS feed: {feed_url}")
+                    logger.error(f"Error parsing RSS feed {feed_url}: {e}")
                     continue
                 
                 # Process each entry
-                for entry in feed.items:
+                for entry in feed.entries:
                     try:
                         event = await self._parse_rss_entry(entry, city, country, feed_url)
                         if event and self._is_event_in_date_range(event, start_date, end_date):
@@ -544,36 +255,86 @@ class RSSEventScraper:
             logger.warning("icalendar not available - iCal scraping disabled")
             return events
         
-        for ical_url in self.ical_feeds:
+        logger.info(f"🔍 Processing {len(self.ical_feeds)} iCal feeds...")
+        successful_feeds = 0
+        failed_feeds = 0
+        
+        for i, ical_url in enumerate(self.ical_feeds, 1):
             try:
-                logger.info(f"Scraping iCal feed: {ical_url}")
+                logger.info(f"📅 [{i}/{len(self.ical_feeds)}] Scraping iCal feed: {ical_url}")
                 
-                # Fetch iCal feed
-                async with self.session.get(ical_url) as response:
-                    if response.status != 200:
-                        logger.warning(f"iCal feed {ical_url} returned status {response.status}")
-                        continue
-                    
-                    content = await response.text()
+                # Add small delay to avoid rate limiting
+                await asyncio.sleep(0.5)
                 
-                # Parse iCal feed
-                calendar = icalendar.Calendar.from_ical(content)
+                # Fetch iCal feed with retry logic
+                max_retries = 2
+                for attempt in range(max_retries):
+                    try:
+                        async with self.session.get(ical_url) as response:
+                            if response.status == 200:
+                                content = await response.text()
+                                break
+                            elif response.status == 403:
+                                logger.warning(f"iCal feed {ical_url} returned 403 Forbidden - may be blocking automated requests")
+                                continue
+                            elif response.status == 404:
+                                logger.warning(f"iCal feed {ical_url} returned 404 Not Found - feed may not exist")
+                                continue
+                            else:
+                                logger.warning(f"iCal feed {ical_url} returned status {response.status}")
+                                if attempt < max_retries - 1:
+                                    await asyncio.sleep(1)  # Wait before retry
+                                    continue
+                                else:
+                                    continue
+                    except asyncio.TimeoutError:
+                        logger.warning(f"Timeout accessing iCal feed: {ical_url}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(1)
+                            continue
+                        else:
+                            continue
+                    except Exception as e:
+                        logger.warning(f"Error accessing iCal feed {ical_url}: {e}")
+                        if attempt < max_retries - 1:
+                            await asyncio.sleep(1)
+                            continue
+                        else:
+                            continue
+                else:
+                    # If we get here, all retries failed
+                    continue
+                
+                # Parse iCal feed with icalendar
+                try:
+                    calendar = icalendar.Calendar.from_ical(content)
+                except Exception as e:
+                    logger.error(f"Error parsing iCal feed {ical_url}: {e}")
+                    continue
                 
                 # Process each event
-                for component in calendar.walk('vevent'):
-                    try:
-                        event = await self._parse_ical_event(component, city, country, ical_url)
-                        if event and self._is_event_in_date_range(event, start_date, end_date):
-                            events.append(event)
-                    except Exception as e:
-                        logger.error(f"Error parsing iCal event: {e}")
-                        continue
+                for component in calendar.walk():
+                    if component.name == "VEVENT":
+                        try:
+                            event = await self._parse_ical_event(component, city, country, ical_url)
+                            if event and self._is_event_in_date_range(event, start_date, end_date):
+                                events.append(event)
+                        except Exception as e:
+                            logger.error(f"Error parsing iCal event: {e}")
+                            continue
                 
                 logger.info(f"Found {len([e for e in events if e.sources[0].url == ical_url])} events in {ical_url}")
+                successful_feeds += 1
                 
             except Exception as e:
-                logger.error(f"Error scraping iCal feed {ical_url}: {e}")
+                logger.error(f"❌ Error scraping iCal feed {ical_url}: {e}")
+                failed_feeds += 1
                 continue
+        
+        logger.info(f"📊 iCal feed processing complete:")
+        logger.info(f"   ✅ Successful feeds: {successful_feeds}")
+        logger.info(f"   ❌ Failed feeds: {failed_feeds}")
+        logger.info(f"   📈 Total events found: {len(events)}")
         
         return events
     
@@ -588,65 +349,60 @@ class RSSEventScraper:
             # Extract description
             description = entry.description.strip() if entry.description else ''
             if description:
-                # Clean HTML from description
-                from bs4 import BeautifulSoup
-                soup = BeautifulSoup(description, 'html.parser')
-                description = soup.get_text().strip()
+                # Clean up HTML tags
+                import re
+                description = re.sub(r'<[^>]+>', '', description)
+                description = description.strip()
             
             # Extract link
-            link = entry.link if entry.link else ''
-            if not link:
-                return None
+            link = entry.link.strip() if entry.link else ''
             
             # Extract date
-            start_date = None
-            if entry.pub_date:
-                start_date = entry.pub_date
-            elif entry.last_build_date:
-                start_date = entry.last_build_date
+            event_date = None
+            if hasattr(entry, 'published') and entry.published:
+                try:
+                    event_date = entry.published
+                except:
+                    pass
             
-            if not start_date:
-                # Try to parse date from title or description
-                start_date = self._extract_date_from_text(title + " " + description)
-            
-            if not start_date:
-                return None
-            
-            # Extract location (try to find city/country in description)
-            location_text = self._extract_location_from_text(description + " " + title)
-            venue_name = None
+            # Extract location from description or title
+            location_text = self._extract_location_from_text(f"{title} {description}")
+            venue_name = location_text if location_text else "TBD"
             address = f"{city}, {country}"
             
-            if location_text:
-                if ',' in location_text:
-                    parts = location_text.split(',')
-                    venue_name = parts[0].strip()
-                    address = ','.join(parts[1:]).strip()
-                else:
-                    venue_name = location_text
-            
-            # Create location
+            # Create location object
             location = Location(
+                venue_name=venue_name,
                 address=address,
                 city=city,
                 country=country,
-                venue_name=venue_name
+                latitude=None,
+                longitude=None
             )
             
             # Create event source
             source = EventSource(
-                platform=self.platform_name,
-                url=link,
-                scraped_at=datetime.utcnow(),
-                source_id=entry.guid if entry.guid else link
+                platform="rss",
+                url=feed_url,
+                event_id=link or title,
+                scraped_at=datetime.utcnow()
             )
             
             # Create event
             event = Event(
                 title=title,
                 description=description,
-                start_date=start_date,
+                start_date=event_date,
+                end_date=event_date,  # Assume same day if no end date
                 location=location,
+                category="General",
+                tags=[],
+                price=None,
+                contact_info=ContactInfo(
+                    email=None,
+                    phone=None,
+                    website=link
+                ),
                 sources=[source]
             )
             
@@ -668,45 +424,50 @@ class RSSEventScraper:
             description = str(component.get('description', '')).strip()
             
             # Extract start date
-            start_date = None
-            if component.get('dtstart'):
-                dt_start = component.get('dtstart').dt
-                if isinstance(dt_start, datetime):
-                    start_date = dt_start
+            start_date = component.get('dtstart')
+            if start_date:
+                if hasattr(start_date, 'dt'):
+                    start_date = start_date.dt
+                if isinstance(start_date, datetime):
+                    pass  # Already a datetime
                 else:
-                    # All-day event
-                    start_date = datetime.combine(dt_start, datetime.min.time())
+                    start_date = datetime.combine(start_date, datetime.min.time())
+            else:
+                start_date = None
             
-            if not start_date:
-                return None
+            # Extract end date
+            end_date = component.get('dtend')
+            if end_date:
+                if hasattr(end_date, 'dt'):
+                    end_date = end_date.dt
+                if isinstance(end_date, datetime):
+                    pass  # Already a datetime
+                else:
+                    end_date = datetime.combine(end_date, datetime.min.time())
+            else:
+                end_date = start_date  # Assume same day if no end date
             
             # Extract location
             location_text = str(component.get('location', '')).strip()
-            venue_name = None
+            venue_name = location_text if location_text else "TBD"
             address = f"{city}, {country}"
             
-            if location_text:
-                if ',' in location_text:
-                    parts = location_text.split(',')
-                    venue_name = parts[0].strip()
-                    address = ','.join(parts[1:]).strip()
-                else:
-                    venue_name = location_text
-            
-            # Create location
+            # Create location object
             location = Location(
+                venue_name=venue_name,
                 address=address,
                 city=city,
                 country=country,
-                venue_name=venue_name
+                latitude=None,
+                longitude=None
             )
             
             # Create event source
             source = EventSource(
-                platform=self.platform_name,
+                platform="ical",
                 url=feed_url,
-                scraped_at=datetime.utcnow(),
-                source_id=str(component.get('uid', ''))
+                event_id=str(component.get('uid', title)),
+                scraped_at=datetime.utcnow()
             )
             
             # Create event
@@ -714,7 +475,16 @@ class RSSEventScraper:
                 title=title,
                 description=description,
                 start_date=start_date,
+                end_date=end_date,
                 location=location,
+                category="General",
+                tags=[],
+                price=None,
+                contact_info=ContactInfo(
+                    email=None,
+                    phone=None,
+                    website=None
+                ),
                 sources=[source]
             )
             
@@ -739,19 +509,18 @@ class RSSEventScraper:
             match = re.search(pattern, text)
             if match:
                 try:
-                    if '/' in match.group(0):
+                    if '/' in pattern:
                         month, day, year = match.groups()
                         return datetime(int(year), int(month), int(day))
-                    elif '-' in match.group(0):
+                    elif '-' in pattern:
                         year, month, day = match.groups()
                         return datetime(int(year), int(month), int(day))
                     else:
-                        # Month name format
                         month_name, day, year = match.groups()
                         month_num = self._month_name_to_number(month_name)
                         if month_num:
                             return datetime(int(year), month_num, int(day))
-                except ValueError:
+                except:
                     continue
         
         return None
@@ -761,31 +530,26 @@ class RSSEventScraper:
         months = {
             'january': 1, 'february': 2, 'march': 3, 'april': 4,
             'may': 5, 'june': 6, 'july': 7, 'august': 8,
-            'september': 9, 'october': 10, 'november': 11, 'december': 12,
-            'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4,
-            'may': 5, 'jun': 6, 'jul': 7, 'aug': 8,
-            'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+            'september': 9, 'october': 10, 'november': 11, 'december': 12
         }
         return months.get(month_name.lower())
     
     def _extract_location_from_text(self, text: str) -> Optional[str]:
-        """Extract location information from text."""
+        """Extract location from text."""
         import re
         
-        # Look for venue patterns
-        venue_patterns = [
+        # Common location patterns
+        patterns = [
             r'at\s+([^,]+)',
             r'@\s+([^,]+)',
             r'venue:\s*([^,]+)',
             r'location:\s*([^,]+)',
         ]
         
-        for pattern in venue_patterns:
+        for pattern in patterns:
             match = re.search(pattern, text, re.IGNORECASE)
             if match:
-                venue = match.group(1).strip()
-                if len(venue) > 3 and len(venue) < 100:  # Reasonable venue name length
-                    return venue
+                return match.group(1).strip()
         
         return None
     
@@ -796,30 +560,27 @@ class RSSEventScraper:
         end_date: Optional[datetime]
     ) -> bool:
         """Check if event is within the specified date range."""
-        if not start_date and not end_date:
-            return True
+        if not event.start_date:
+            return True  # Include events without dates
         
-        event_date = event.start_date
+        # Handle timezone-aware and naive datetimes
+        event_start = event.start_date
+        if event_start.tzinfo is None:
+            # Make naive datetime timezone-aware (assume UTC)
+            event_start = event_start.replace(tzinfo=None)
         
-        # Handle timezone-aware vs timezone-naive datetime comparison
-        if start_date:
-            # Make start_date timezone-aware if event_date is timezone-aware
-            if event_date.tzinfo is not None and start_date.tzinfo is None:
-                start_date = start_date.replace(tzinfo=event_date.tzinfo)
-            elif event_date.tzinfo is None and start_date.tzinfo is not None:
-                event_date = event_date.replace(tzinfo=start_date.tzinfo)
+        if start_date and end_date:
+            # Make sure both dates are timezone-aware or both are naive
+            if start_date.tzinfo is None and event_start.tzinfo is not None:
+                start_date = start_date.replace(tzinfo=None)
+            elif start_date.tzinfo is not None and event_start.tzinfo is None:
+                start_date = start_date.replace(tzinfo=None)
             
-            if event_date < start_date:
-                return False
-        
-        if end_date:
-            # Make end_date timezone-aware if event_date is timezone-aware
-            if event_date.tzinfo is not None and end_date.tzinfo is None:
-                end_date = end_date.replace(tzinfo=event_date.tzinfo)
-            elif event_date.tzinfo is None and end_date.tzinfo is not None:
-                event_date = event_date.replace(tzinfo=end_date.tzinfo)
+            if end_date.tzinfo is None and event_start.tzinfo is not None:
+                end_date = end_date.replace(tzinfo=None)
+            elif end_date.tzinfo is not None and event_start.tzinfo is None:
+                end_date = end_date.replace(tzinfo=None)
             
-            if event_date > end_date:
-                return False
+            return start_date <= event_start <= end_date
         
         return True

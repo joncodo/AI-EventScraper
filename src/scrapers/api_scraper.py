@@ -23,7 +23,7 @@ class APIEventScraper:
         self.api_configs = {
             'eventbrite': {
                 'base_url': 'https://www.eventbriteapi.com/v3',
-                'endpoint': '/events/search/',
+                'endpoint': '/events/search',
                 'api_key': getattr(settings, 'eventbrite_api_key', None),
                 'enabled': True
             },
