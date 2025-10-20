@@ -5,7 +5,7 @@
     "buildCommand": "chmod +x build.sh && ./build.sh"
   },
   "deploy": {
-    "startCommand": "python startup_deps.py && python railway_complete.py",
+    "startCommand": "python startup.py",
     "healthcheckPath": "/ping",
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
