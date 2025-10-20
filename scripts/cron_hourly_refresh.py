@@ -35,7 +35,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger("cron_hourly_refresh")
 
-from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
+try:
+    from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
+    logger.info("Using enhanced scraper manager")
+except ImportError as e:
+    logger.warning(f"Enhanced scraper manager not available: {e}")
+    # Fallback to regular scraper manager if enhanced version fails
+    from scrapers.scraper_manager import scraper_manager as enhanced_scraper_manager  # noqa: E402
+    logger.info("Using regular scraper manager as fallback")
 
 
 DEFAULT_FALLBACK_CITIES: List[str] = [
