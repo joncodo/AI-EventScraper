@@ -48,5 +48,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - simple server test
-CMD ["python", "simple_server_test.py"]
+# Default command - minimal test
+CMD ["python", "minimal_test.py"]
