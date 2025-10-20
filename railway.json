@@ -10,8 +10,7 @@
     "healthcheckTimeout": 30,
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
-  }
-  ,
+  },
   "services": [
     {
       "name": "hourly-refresh",

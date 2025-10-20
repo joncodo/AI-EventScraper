@@ -25,7 +25,13 @@ class AIProcessor:
         )
         
         if api_key:
-            self.client = AsyncOpenAI(api_key=api_key)
+            try:
+                self.client = AsyncOpenAI(api_key=api_key)
+                logger.info("OpenAI client initialized successfully")
+            except Exception as e:
+                logger.error(f"Failed to initialize OpenAI client: {e}")
+                self.client = None
+                logger.warning("AI features will be limited due to OpenAI client initialization failure")
         else:
             self.client = None
             logger.warning("OpenAI API key not provided. AI features will be limited.")
