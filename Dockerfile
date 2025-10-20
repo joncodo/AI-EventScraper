@@ -10,7 +10,7 @@ ENV PYTHONPATH=/app/src
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 # Force rebuild with timestamp
-ENV BUILD_TIMESTAMP=2025-10-20T20:00:00Z
+ENV BUILD_TIMESTAMP=2025-10-20T20:20:11Z
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -51,5 +51,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - NUCLEAR TEST
-CMD ["python", "nuclear_test.py"]
+# Default command - Use consolidated startup script
+CMD ["python", "startup.py"]
