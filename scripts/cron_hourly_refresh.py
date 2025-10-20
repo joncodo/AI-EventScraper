@@ -28,7 +28,7 @@ sys.path.insert(0, str(src_path))
 
 from core.database import db  # noqa: E402
 from core.models import ScrapeRequest  # noqa: E402
-from scrapers.scraper_manager import ScraperManager  # noqa: E402
+from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
 
 
 logging.basicConfig(
@@ -166,7 +166,7 @@ async def run_hourly_refresh():
     top_cities = await get_top_cities(limit=int(os.getenv("CRON_TOP_CITIES_LIMIT", "12")))
     logger.info(f"[cron] Top cities to refresh: {top_cities}")
 
-    scraper_manager = ScraperManager()
+    scraper_manager = enhanced_scraper_manager
 
     # Limit concurrent city refreshes to avoid rate limits
     semaphore = asyncio.Semaphore(int(os.getenv("CRON_CITY_CONCURRENCY", "2")))
