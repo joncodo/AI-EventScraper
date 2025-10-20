@@ -167,24 +167,42 @@ class APIEventScraper:
             if end_date:
                 params['start_date.range_end'] = end_date.isoformat()
             
-            # Make API request - use the correct endpoint
-            url = "https://www.eventbriteapi.com/v3/events/search/"
-            async with self.session.get(url, params=params) as response:
-                if response.status != 200:
-                    logger.warning(f"Eventbrite API returned status {response.status}")
-                    return events
-                
-                data = await response.json()
+            # Try multiple possible endpoints
+            endpoints = [
+                "https://www.eventbriteapi.com/v3/events/search/",
+                "https://www.eventbriteapi.com/v3/events/search",
+                "https://www.eventbriteapi.com/v3/events/",
+            ]
             
-            # Parse events
-            for event_data in data.get('events', []):
+            for url in endpoints:
                 try:
-                    event = self._parse_eventbrite_event(event_data, city, country)
-                    if event:
-                        events.append(event)
+                    async with self.session.get(url, params=params) as response:
+                        if response.status == 200:
+                            data = await response.json()
+                            
+                            # Parse events
+                            for event_data in data.get('events', []):
+                                try:
+                                    event = self._parse_eventbrite_event(event_data, city, country)
+                                    if event:
+                                        events.append(event)
+                                except Exception as e:
+                                    logger.error(f"Error parsing Eventbrite event: {e}")
+                                    continue
+                            break  # Success, exit the loop
+                        elif response.status == 404:
+                            logger.warning(f"Eventbrite API endpoint {url} not found (404)")
+                            continue  # Try next endpoint
+                        else:
+                            logger.warning(f"Eventbrite API returned status {response.status} for {url}")
+                            continue  # Try next endpoint
+                            
                 except Exception as e:
-                    logger.error(f"Error parsing Eventbrite event: {e}")
-                    continue
+                    logger.error(f"Error with Eventbrite API endpoint {url}: {e}")
+                    continue  # Try next endpoint
+            
+            if not events:
+                logger.warning("All Eventbrite API endpoints failed - API may have changed")
         
         except Exception as e:
             logger.error(f"Error scraping Eventbrite API: {e}")

@@ -59,13 +59,24 @@ class EnhancedScraperManager:
         async def scrape_alternative_with_semaphore(scraper):
             async with semaphore:
                 try:
-                    events = await scraper.scrape_events(
-                        city=request.city,
-                        country=request.country,
-                        radius_km=request.radius_km,
-                        start_date=request.start_date,
-                        end_date=request.end_date
-                    )
+                    # Initialize session for alternative scrapers that need it
+                    if hasattr(scraper, '__aenter__') and hasattr(scraper, '__aexit__'):
+                        async with scraper:
+                            events = await scraper.scrape_events(
+                                city=request.city,
+                                country=request.country,
+                                radius_km=request.radius_km,
+                                start_date=request.start_date,
+                                end_date=request.end_date
+                            )
+                    else:
+                        events = await scraper.scrape_events(
+                            city=request.city,
+                            country=request.country,
+                            radius_km=request.radius_km,
+                            start_date=request.start_date,
+                            end_date=request.end_date
+                        )
                     logger.info(f"Alternative scraper found {len(events)} events from {scraper.platform_name}")
                     return events
                 except Exception as e:
@@ -75,13 +86,24 @@ class EnhancedScraperManager:
         async def scrape_enhanced_with_semaphore(scraper):
             async with semaphore:
                 try:
-                    events = await scraper.scrape_events(
-                        city=request.city,
-                        country=request.country,
-                        radius_km=request.radius_km,
-                        start_date=request.start_date,
-                        end_date=request.end_date
-                    )
+                    # Initialize session for enhanced scrapers that need it
+                    if hasattr(scraper, '__aenter__') and hasattr(scraper, '__aexit__'):
+                        async with scraper:
+                            events = await scraper.scrape_events(
+                                city=request.city,
+                                country=request.country,
+                                radius_km=request.radius_km,
+                                start_date=request.start_date,
+                                end_date=request.end_date
+                            )
+                    else:
+                        events = await scraper.scrape_events(
+                            city=request.city,
+                            country=request.country,
+                            radius_km=request.radius_km,
+                            start_date=request.start_date,
+                            end_date=request.end_date
+                        )
                     logger.info(f"Enhanced scraper found {len(events)} events from {scraper.platform_name}")
                     return events
                 except Exception as e:
