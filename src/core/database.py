@@ -1,9 +1,8 @@
 """Database connection and operations for the AI Event Scraper."""
-import asyncio
 from typing import List, Optional, Dict, Any
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from bson import ObjectId
 
@@ -61,6 +60,8 @@ class Database:
             ("tags", ASCENDING),
             ("created_at", DESCENDING),
             ("updated_at", DESCENDING),
+            ("view_count", DESCENDING),
+            ("next_refresh_at", ASCENDING),
         ]
         
         for index_spec in indexes:
@@ -161,6 +162,49 @@ class Database:
         )
         
         return result.modified_count > 0
+
+    async def increment_view_and_schedule_refresh(
+        self,
+        event_id: str,
+        now: datetime,
+        staleness_hours_high: int = 4,
+        staleness_hours_low: int = 48,
+    ) -> Optional[Dict[str, Any]]:
+        """Increment view count and set next_refresh_at based on popularity/staleness.
+
+        High-popularity events (by view_count and upcoming window) get sooner refresh windows.
+        """
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+
+        oid = ObjectId(event_id)
+        doc = await self.db.events.find_one({"_id": oid})
+        if not doc:
+            return None
+
+        current_views = int(doc.get("view_count", 0)) + 1
+
+        start_date = doc.get("start_date")
+        is_upcoming = False
+        if isinstance(start_date, datetime):
+            is_upcoming = start_date >= now
+
+        # Tier logic: if upcoming and views high → high tier; else low
+        tier = "high" if (is_upcoming and current_views >= 10) else "low"
+        delta_hours = staleness_hours_high if tier == "high" else staleness_hours_low
+        next_refresh_at = now.replace(microsecond=0) + timedelta(hours=delta_hours)
+
+        update = {
+            "view_count": current_views,
+            "last_viewed_at": now,
+            "staleness_tier": tier,
+            "next_refresh_at": next_refresh_at,
+            "updated_at": now,
+        }
+
+        await self.db.events.update_one({"_id": oid}, {"$set": update})
+        doc.update(update)
+        return doc
     
     async def delete_event(self, event_id: str) -> bool:
         """Delete an event from the database."""

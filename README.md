@@ -267,6 +267,14 @@ The system is designed for easy deployment to any cloud platform:
 - **Azure**: Virtual Machines, Container Instances
 - **MongoDB Atlas**: Cloud database hosting
 
+### Scheduled hourly refresh
+
+The service includes an hourly background job that refreshes popular locations and scans for new events.
+
+- Local run: `make cron-hourly`
+- Cloud (Render): configured as a cron job named `hourly-refresh` with schedule `0 * * * *` in `render.yaml`.
+- Cloud (Railway): add a cron service named `hourly-refresh` with schedule `0 * * * *` executing `python scripts/cron_hourly_refresh.py`. See `railway.json` example.
+
 ## API Documentation
 
 Complete API documentation is available at:

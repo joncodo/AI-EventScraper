@@ -147,6 +147,10 @@ docs:
 		echo "Sphinx not found. Install with: pip install sphinx"; \
 	fi
 
+# Cron / background jobs
+cron-hourly:
+	python scripts/cron_hourly_refresh.py
+
 # Backup
 backup:
 	@echo "Creating backup..."

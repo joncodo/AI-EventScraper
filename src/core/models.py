@@ -1,6 +1,6 @@
 """Data models for the AI Event Scraper."""
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict
 from pydantic import BaseModel, Field
 from bson import ObjectId
 
@@ -83,6 +83,13 @@ class Event(BaseModel):
     # Metadata
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    # Engagement and freshness
+    view_count: int = 0
+    popularity_score: Optional[float] = None
+    staleness_tier: Optional[str] = None  # e.g., "high", "medium", "low"
+    next_refresh_at: Optional[datetime] = None
+    last_viewed_at: Optional[datetime] = None
     
     class Config:
         populate_by_name = True

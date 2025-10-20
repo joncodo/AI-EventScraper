@@ -28,14 +28,14 @@ project_root = Path(__file__).parent
 src_path = project_root / "src"
 sys.path.insert(0, str(src_path))
 
-from fastapi import FastAPI, HTTPException, Query, Path
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
-from bson import ObjectId
-import uvicorn
+from fastapi import FastAPI, HTTPException, Query, Path  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from pydantic import BaseModel, Field  # noqa: E402
+from bson import ObjectId  # noqa: E402
+import uvicorn  # noqa: E402
 
-from core.database import db
-from core.models import Location, ContactInfo, EventSource
+from core.database import db  # noqa: E402
+from core.models import Location, ContactInfo, EventSource  # noqa: E402
 
 # Configure logging
 logging.basicConfig(
@@ -77,6 +77,11 @@ class EventResponse(BaseModel):
     sources: List[EventSource]
     ai_processed: bool
     confidence_score: float
+    view_count: int | None = None
+    popularity_score: float | None = None
+    staleness_tier: str | None = None
+    next_refresh_at: datetime | None = None
+    last_viewed_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -260,16 +265,21 @@ async def get_statistics():
         confidence_scores = []
         async for doc in database.events.find({}, {"confidence_score": 1}):
             if "confidence_score" in doc:
-                confidence_scores.append(doc["confidence_score"])
+                val = doc["confidence_score"]
+                if isinstance(val, (int, float)):
+                    confidence_scores.append(float(val))
         
         avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
         
         # City counts
         city_counts = {}
         async for doc in database.events.find({}, {"location.city": 1}):
-            if "location" in doc and "city" in doc["location"]:
-                city = doc["location"]["city"]
-                city_counts[city] = city_counts.get(city, 0) + 1
+            try:
+                city = doc.get("location", {}).get("city")
+                if city:
+                    city_counts[city] = city_counts.get(city, 0) + 1
+            except Exception:
+                continue
         
         top_cities = [{"city": city, "count": count} for city, count in sorted(city_counts.items(), key=lambda x: x[1], reverse=True)[:10]]
         total_cities = len(city_counts)
@@ -277,8 +287,8 @@ async def get_statistics():
         # Category counts
         category_counts = {}
         async for doc in database.events.find({}, {"category": 1}):
-            if "category" in doc:
-                category = doc["category"]
+            category = doc.get("category")
+            if category:
                 category_counts[category] = category_counts.get(category, 0) + 1
         
         top_categories = [{"category": category, "count": count} for category, count in sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:10]]
@@ -287,29 +297,36 @@ async def get_statistics():
         # Platform distribution
         platform_counts = {}
         async for doc in database.events.find({}, {"sources.platform": 1}):
-            if "sources" in doc and doc["sources"]:
-                for source in doc["sources"]:
-                    if "platform" in source:
-                        platform = source["platform"]
-                        platform_counts[platform] = platform_counts.get(platform, 0) + 1
+            for source in doc.get("sources", []) or []:
+                platform = source.get("platform")
+                if platform:
+                    platform_counts[platform] = platform_counts.get(platform, 0) + 1
         
         # Price distribution
         price_distribution = {}
         async for doc in database.events.find({}, {"price": 1}):
-            if "price" in doc:
-                price = doc["price"]
-                if price == "0" or price == 0:
-                    price_distribution["Free"] = price_distribution.get("Free", 0) + 1
-                elif price in ["1", "2", "3", "4", "5"]:
-                    price_distribution["$1-5"] = price_distribution.get("$1-5", 0) + 1
-                elif price in ["6", "7", "8", "9", "10"]:
-                    price_distribution["$6-10"] = price_distribution.get("$6-10", 0) + 1
-                elif price in ["11", "12", "13", "14", "15", "16", "17", "18", "19", "20"]:
-                    price_distribution["$11-20"] = price_distribution.get("$11-20", 0) + 1
-                elif price in ["21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41", "42", "43", "44", "45", "46", "47", "48", "49", "50"]:
-                    price_distribution["$21-50"] = price_distribution.get("$21-50", 0) + 1
-                else:
-                    price_distribution["$50+"] = price_distribution.get("$50+", 0) + 1
+            price_raw = doc.get("price")
+            if price_raw is None:
+                continue
+            try:
+                price_val = float(price_raw)
+            except Exception:
+                # Non-numeric; group as "$50+" bucket to avoid failures
+                price_distribution["$50+"] = price_distribution.get("$50+", 0) + 1
+                continue
+
+            if price_val <= 0:
+                price_distribution["Free"] = price_distribution.get("Free", 0) + 1
+            elif price_val <= 5:
+                price_distribution["$1-5"] = price_distribution.get("$1-5", 0) + 1
+            elif price_val <= 10:
+                price_distribution["$6-10"] = price_distribution.get("$6-10", 0) + 1
+            elif price_val <= 20:
+                price_distribution["$11-20"] = price_distribution.get("$11-20", 0) + 1
+            elif price_val <= 50:
+                price_distribution["$21-50"] = price_distribution.get("$21-50", 0) + 1
+            else:
+                price_distribution["$50+"] = price_distribution.get("$50+", 0) + 1
         
         return StatsResponse(
             total_events=total_events,
@@ -450,11 +467,37 @@ async def get_event(event_id: str = Path(..., description="Event ID")):
             raise HTTPException(status_code=404, detail="Event not found")
         
         return event_doc_to_response(doc)
-        
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error getting event {event_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+@app.post("/events/{event_id}/view", response_model=EventResponse)
+async def increment_event_view(event_id: str = Path(..., description="Event ID")):
+    """Increment event view count and schedule refresh by staleness tier."""
+    try:
+        database = await get_database()
+        if database is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+
+        # Validate ObjectId
+        try:
+            object_id = ObjectId(event_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid event ID format")
+
+        # Use db helper to increment view and update next_refresh_at
+        from core.database import db as db_instance
+        now = datetime.now()
+        updated = await db_instance.increment_view_and_schedule_refresh(str(object_id), now)
+        if not updated:
+            raise HTTPException(status_code=404, detail="Event not found")
+
+        return event_doc_to_response(updated)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error incrementing view for event {event_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/events", response_model=EventResponse)

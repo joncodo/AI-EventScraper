@@ -1,0 +1,125 @@
+{
+  "info": {
+    "name": "AI Event Scraper - Cloud API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Ping",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/ping"
+      }
+    },
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Stats",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/stats"
+      }
+    },
+    {
+      "name": "Events - List",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/events?limit=10&sort_by=created_at&sort_order=desc",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "events"
+          ],
+          "query": [
+            { "key": "limit", "value": "10" },
+            { "key": "sort_by", "value": "created_at" },
+            { "key": "sort_order", "value": "desc" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Events - Search",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/events/search?q=tech&limit=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "events",
+            "search"
+          ],
+          "query": [
+            { "key": "q", "value": "tech" },
+            { "key": "limit", "value": "10" }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Events - Recent",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events/recent?limit=10"
+      }
+    },
+    {
+      "name": "Events - Get by ID",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "// Set an example event id here or use one captured from previous responses",
+              "pm.variables.set('eventId', pm.variables.get('eventId') || 'REPLACE_WITH_EVENT_ID');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events/{{eventId}}"
+      }
+    },
+    {
+      "name": "Events - Increment View",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/events/{{eventId}}/view"
+      }
+    },
+    {
+      "name": "Cities",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/cities"
+      }
+    },
+    {
+      "name": "Categories",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/categories"
+      }
+    },
+    {
+      "name": "Random Event",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/events/random"
+      }
+    }
+  ]
+}
+
+

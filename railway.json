@@ -11,4 +11,17 @@
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 5
   }
+  ,
+  "services": [
+    {
+      "name": "hourly-refresh",
+      "type": "cron",
+      "schedule": "0 * * * *",
+      "command": "python scripts/cron_hourly_refresh.py",
+      "envVars": {
+        "ENVIRONMENT": "production",
+        "CRON_CITY_CONCURRENCY": "2"
+      }
+    }
+  ]
 }
