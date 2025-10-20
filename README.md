@@ -6,7 +6,7 @@ A comprehensive event discovery and data collection platform that intelligently 
 
 The AI Event Scraper is a production-ready system designed to collect, process, and serve event data at scale. It combines web scraping capabilities with AI-powered data enhancement to provide clean, categorized, and searchable event information.
 
-### Key Features
+### Key Features Here
 
 - **Multi-Platform Scraping**: Collects events from Eventbrite, Meetup, Facebook Events, and other major platforms
 - **AI-Powered Processing**: Uses OpenAI to categorize, tag, and enhance event data quality
