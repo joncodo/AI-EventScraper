@@ -726,10 +726,25 @@ class RSSEventScraper:
         
         event_date = event.start_date
         
-        if start_date and event_date < start_date:
-            return False
+        # Handle timezone-aware vs timezone-naive datetime comparison
+        if start_date:
+            # Make start_date timezone-aware if event_date is timezone-aware
+            if event_date.tzinfo is not None and start_date.tzinfo is None:
+                start_date = start_date.replace(tzinfo=event_date.tzinfo)
+            elif event_date.tzinfo is None and start_date.tzinfo is not None:
+                event_date = event_date.replace(tzinfo=start_date.tzinfo)
+            
+            if event_date < start_date:
+                return False
         
-        if end_date and event_date > end_date:
-            return False
+        if end_date:
+            # Make end_date timezone-aware if event_date is timezone-aware
+            if event_date.tzinfo is not None and end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=event_date.tzinfo)
+            elif event_date.tzinfo is None and end_date.tzinfo is not None:
+                event_date = event_date.replace(tzinfo=end_date.tzinfo)
+            
+            if event_date > end_date:
+                return False
         
         return True
