@@ -1,125 +1,254 @@
 {
   "info": {
-    "name": "AI Event Scraper - Cloud API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "AI Event Scraper - Railway API",
+    "description": "Complete API collection for the AI Event Scraper deployed on Railway",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
   },
   "item": [
     {
-      "name": "Ping",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/ping"
-      }
-    },
-    {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/health"
-      }
-    },
-    {
-      "name": "Stats",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/stats"
-      }
-    },
-    {
-      "name": "Events - List",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/events?limit=10&sort_by=created_at&sort_order=desc",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "events"
-          ],
-          "query": [
-            { "key": "limit", "value": "10" },
-            { "key": "sort_by", "value": "created_at" },
-            { "key": "sort_order", "value": "desc" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Events - Search",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/events/search?q=tech&limit=10",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "events",
-            "search"
-          ],
-          "query": [
-            { "key": "q", "value": "tech" },
-            { "key": "limit", "value": "10" }
-          ]
-        }
-      }
-    },
-    {
-      "name": "Events - Recent",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/events/recent?limit=10"
-      }
-    },
-    {
-      "name": "Events - Get by ID",
-      "event": [
+      "name": "System Health",
+      "item": [
         {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              "// Set an example event id here or use one captured from previous responses",
-              "pm.variables.set('eventId', pm.variables.get('eventId') || 'REPLACE_WITH_EVENT_ID');"
-            ],
-            "type": "text/javascript"
+          "name": "Root",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/",
+            "description": "Root endpoint with basic API information"
+          }
+        },
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/ping",
+            "description": "Simple ping endpoint to test connectivity"
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health",
+            "description": "Detailed health check with system status"
+          }
+        },
+        {
+          "name": "API Info",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/info",
+            "description": "API information and version details"
           }
         }
-      ],
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/events/{{eventId}}"
-      }
+      ]
     },
     {
-      "name": "Events - Increment View",
-      "request": {
-        "method": "POST",
-        "url": "{{baseUrl}}/events/{{eventId}}/view"
-      }
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events?limit=10&offset=0&sort_by=created_at&sort_order=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["events"],
+              "query": [
+                { "key": "limit", "value": "10", "description": "Number of events to return" },
+                { "key": "offset", "value": "0", "description": "Number of events to skip" },
+                { "key": "sort_by", "value": "created_at", "description": "Field to sort by" },
+                { "key": "sort_order", "value": "desc", "description": "Sort order (asc/desc)" },
+                { "key": "city", "value": "", "description": "Filter by city", "disabled": true },
+                { "key": "category", "value": "", "description": "Filter by category", "disabled": true },
+                { "key": "tags", "value": "", "description": "Filter by tags", "disabled": true },
+                { "key": "date_from", "value": "", "description": "Filter events from date", "disabled": true },
+                { "key": "date_to", "value": "", "description": "Filter events to date", "disabled": true }
+              ]
+            },
+            "description": "Get a list of events with optional filtering and pagination"
+          }
+        },
+        {
+          "name": "Search Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/search?q=tech&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "search"],
+              "query": [
+                { "key": "q", "value": "tech", "description": "Search query" },
+                { "key": "limit", "value": "10", "description": "Number of results" },
+                { "key": "city", "value": "", "description": "Filter by city", "disabled": true },
+                { "key": "category", "value": "", "description": "Filter by category", "disabled": true }
+              ]
+            },
+            "description": "Search events by text query"
+          }
+        },
+        {
+          "name": "Get Random Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/random?limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "random"],
+              "query": [
+                { "key": "limit", "value": "5", "description": "Number of random events" }
+              ]
+            },
+            "description": "Get random events for discovery"
+          }
+        },
+        {
+          "name": "Get Recent Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/recent?hours=24&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "recent"],
+              "query": [
+                { "key": "hours", "value": "24", "description": "Hours to look back" },
+                { "key": "limit", "value": "10", "description": "Number of events" }
+              ]
+            },
+            "description": "Get recently added events"
+          }
+        },
+        {
+          "name": "Get Event by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/events/{{eventId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["events", "{{eventId}}"]
+            },
+            "description": "Get a specific event by its ID"
+          }
+        }
+      ]
     },
     {
-      "name": "Cities",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/cities"
-      }
+      "name": "Analytics",
+      "item": [
+        {
+          "name": "Stats",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/stats",
+            "description": "Get overall statistics about events and system"
+          }
+        },
+        {
+          "name": "Cities",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/cities?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["cities"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Number of cities to return" }
+              ]
+            },
+            "description": "Get list of cities with event counts"
+          }
+        },
+        {
+          "name": "Categories",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/categories?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["categories"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Number of categories to return" }
+              ]
+            },
+            "description": "Get list of event categories with counts"
+          }
+        },
+        {
+          "name": "Tags",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/tags?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["tags"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Number of tags to return" }
+              ]
+            },
+            "description": "Get list of popular tags with counts"
+          }
+        },
+        {
+          "name": "Sources",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/sources?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["sources"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Number of sources to return" }
+              ]
+            },
+            "description": "Get list of event sources with counts"
+          }
+        },
+        {
+          "name": "Trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/trends?days=7",
+              "host": ["{{baseUrl}}"],
+              "path": ["trends"],
+              "query": [
+                { "key": "days", "value": "7", "description": "Number of days to analyze" }
+              ]
+            },
+            "description": "Get trending events and categories"
+          }
+        }
+      ]
     },
     {
-      "name": "Categories",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/categories"
-      }
-    },
+      "name": "Data Export",
+      "item": [
+        {
+          "name": "Export Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/export?format=json&limit=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["export"],
+              "query": [
+                { "key": "format", "value": "json", "description": "Export format (json/csv)" },
+                { "key": "limit", "value": "100", "description": "Number of events to export" },
+                { "key": "city", "value": "", "description": "Filter by city", "disabled": true },
+                { "key": "category", "value": "", "description": "Filter by category", "disabled": true }
+              ]
+            },
+            "description": "Export events in various formats"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
     {
-      "name": "Random Event",
-      "request": {
-        "method": "GET",
-        "url": "{{baseUrl}}/events/random"
-      }
+      "key": "baseUrl",
+      "value": "https://ai-event-scraper-production.up.railway.app",
+      "type": "string"
     }
   ]
 }
-
-
