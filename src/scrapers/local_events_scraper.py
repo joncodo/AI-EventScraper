@@ -18,9 +18,9 @@ class LocalEventsScraper:
         self.platform_name = "local_events"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # City and university event APIs
+        # Comprehensive city and university event APIs
         self.local_apis = {
-            # Major US Cities
+            # === MAJOR US CITIES (Socrata Open Data) ===
             'sf_events': {
                 'name': 'San Francisco Events',
                 'url': 'https://data.sfgov.org/resource/event-data.json',
@@ -45,8 +45,74 @@ class LocalEventsScraper:
                 'type': 'socrata',
                 'enabled': True
             },
+            'boston_events': {
+                'name': 'Boston Events',
+                'url': 'https://data.boston.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'seattle_events': {
+                'name': 'Seattle Events',
+                'url': 'https://data.seattle.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'austin_events': {
+                'name': 'Austin Events',
+                'url': 'https://data.austintexas.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'denver_events': {
+                'name': 'Denver Events',
+                'url': 'https://data.denvergov.org/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'portland_events': {
+                'name': 'Portland Events',
+                'url': 'https://data.portlandoregon.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'philadelphia_events': {
+                'name': 'Philadelphia Events',
+                'url': 'https://data.phila.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'dallas_events': {
+                'name': 'Dallas Events',
+                'url': 'https://data.dallasopendata.com/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'houston_events': {
+                'name': 'Houston Events',
+                'url': 'https://data.houstontx.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'miami_events': {
+                'name': 'Miami Events',
+                'url': 'https://data.miamidade.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'atlanta_events': {
+                'name': 'Atlanta Events',
+                'url': 'https://data.atlantaga.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
+            'phoenix_events': {
+                'name': 'Phoenix Events',
+                'url': 'https://data.phoenix.gov/resource/event-data.json',
+                'type': 'socrata',
+                'enabled': True
+            },
             
-            # Universities
+            # === MAJOR UNIVERSITIES ===
             'stanford_events': {
                 'name': 'Stanford Events',
                 'url': 'https://events.stanford.edu/api/events',
@@ -65,8 +131,62 @@ class LocalEventsScraper:
                 'type': 'json',
                 'enabled': True
             },
+            'harvard_events': {
+                'name': 'Harvard Events',
+                'url': 'https://events.harvard.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'yale_events': {
+                'name': 'Yale Events',
+                'url': 'https://events.yale.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'princeton_events': {
+                'name': 'Princeton Events',
+                'url': 'https://events.princeton.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'columbia_events': {
+                'name': 'Columbia Events',
+                'url': 'https://events.columbia.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'uchicago_events': {
+                'name': 'University of Chicago Events',
+                'url': 'https://events.uchicago.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'ucla_events': {
+                'name': 'UCLA Events',
+                'url': 'https://events.ucla.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'uw_events': {
+                'name': 'University of Washington Events',
+                'url': 'https://events.washington.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'nyu_events': {
+                'name': 'NYU Events',
+                'url': 'https://events.nyu.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'usc_events': {
+                'name': 'USC Events',
+                'url': 'https://events.usc.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
             
-            # Museums and Cultural Institutions
+            # === MAJOR MUSEUMS & CULTURAL INSTITUTIONS ===
             'met_events': {
                 'name': 'Metropolitan Museum Events',
                 'url': 'https://www.metmuseum.org/api/events',
@@ -79,6 +199,86 @@ class LocalEventsScraper:
                 'type': 'json',
                 'enabled': True
             },
+            'sfmoma_events': {
+                'name': 'SFMOMA Events',
+                'url': 'https://www.sfmoma.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'getty_events': {
+                'name': 'Getty Museum Events',
+                'url': 'https://www.getty.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'smithsonian_events': {
+                'name': 'Smithsonian Events',
+                'url': 'https://www.si.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'guggenheim_events': {
+                'name': 'Guggenheim Events',
+                'url': 'https://www.guggenheim.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'whitney_events': {
+                'name': 'Whitney Museum Events',
+                'url': 'https://whitney.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'artic_events': {
+                'name': 'Art Institute of Chicago Events',
+                'url': 'https://www.artic.edu/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'lacma_events': {
+                'name': 'LACMA Events',
+                'url': 'https://www.lacma.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            
+            # === PERFORMING ARTS CENTERS ===
+            'lincoln_center_events': {
+                'name': 'Lincoln Center Events',
+                'url': 'https://www.lincolncenter.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'kennedy_center_events': {
+                'name': 'Kennedy Center Events',
+                'url': 'https://www.kennedy-center.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'carnegie_hall_events': {
+                'name': 'Carnegie Hall Events',
+                'url': 'https://www.carnegiehall.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'sfsymphony_events': {
+                'name': 'San Francisco Symphony Events',
+                'url': 'https://www.sfsymphony.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'bso_events': {
+                'name': 'Boston Symphony Orchestra Events',
+                'url': 'https://www.bso.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
+            'nyphil_events': {
+                'name': 'New York Philharmonic Events',
+                'url': 'https://nyphil.org/api/events',
+                'type': 'json',
+                'enabled': True
+            },
         }
         
         # Alternative endpoints for when primary APIs fail
@@ -86,14 +286,77 @@ class LocalEventsScraper:
             'sf_events': [
                 'https://sf.gov/api/events',
                 'https://www.sf.gov/events/feed',
+                'https://data.sfgov.org/resource/events.json',
             ],
             'nyc_events': [
                 'https://www1.nyc.gov/api/events',
                 'https://www1.nyc.gov/events/feed',
+                'https://data.cityofnewyork.us/resource/events.json',
             ],
             'chicago_events': [
                 'https://www.chicago.gov/api/events',
                 'https://www.chicago.gov/events/feed',
+                'https://data.cityofchicago.org/resource/events.json',
+            ],
+            'la_events': [
+                'https://www.lacity.org/api/events',
+                'https://www.lacity.org/events/feed',
+                'https://data.lacity.org/resource/events.json',
+            ],
+            'boston_events': [
+                'https://www.boston.gov/api/events',
+                'https://www.boston.gov/events/feed',
+                'https://data.boston.gov/resource/events.json',
+            ],
+            'seattle_events': [
+                'https://www.seattle.gov/api/events',
+                'https://www.seattle.gov/events/feed',
+                'https://data.seattle.gov/resource/events.json',
+            ],
+            'austin_events': [
+                'https://www.austintexas.gov/api/events',
+                'https://www.austintexas.gov/events/feed',
+                'https://data.austintexas.gov/resource/events.json',
+            ],
+            'denver_events': [
+                'https://www.denvergov.org/api/events',
+                'https://www.denvergov.org/events/feed',
+                'https://data.denvergov.org/resource/events.json',
+            ],
+            'portland_events': [
+                'https://www.portlandoregon.gov/api/events',
+                'https://www.portlandoregon.gov/events/feed',
+                'https://data.portlandoregon.gov/resource/events.json',
+            ],
+            'philadelphia_events': [
+                'https://www.phila.gov/api/events',
+                'https://www.phila.gov/events/feed',
+                'https://data.phila.gov/resource/events.json',
+            ],
+            'dallas_events': [
+                'https://www.dallas.gov/api/events',
+                'https://www.dallas.gov/events/feed',
+                'https://data.dallasopendata.com/resource/events.json',
+            ],
+            'houston_events': [
+                'https://www.houstontx.gov/api/events',
+                'https://www.houstontx.gov/events/feed',
+                'https://data.houstontx.gov/resource/events.json',
+            ],
+            'miami_events': [
+                'https://www.miamidade.gov/api/events',
+                'https://www.miamidade.gov/events/feed',
+                'https://data.miamidade.gov/resource/events.json',
+            ],
+            'atlanta_events': [
+                'https://www.atlantaga.gov/api/events',
+                'https://www.atlantaga.gov/events/feed',
+                'https://data.atlantaga.gov/resource/events.json',
+            ],
+            'phoenix_events': [
+                'https://www.phoenix.gov/api/events',
+                'https://www.phoenix.gov/events/feed',
+                'https://data.phoenix.gov/resource/events.json',
             ],
         }
     
@@ -150,12 +413,25 @@ class LocalEventsScraper:
         
         # Map cities to their APIs
         city_api_mapping = {
-            'san francisco': ['sf_events', 'stanford_events'],
-            'new york': ['nyc_events', 'met_events', 'moma_events'],
-            'chicago': ['chicago_events'],
-            'los angeles': ['la_events'],
-            'boston': ['mit_events'],
+            'san francisco': ['sf_events', 'stanford_events', 'sfmoma_events', 'sfsymphony_events'],
+            'new york': ['nyc_events', 'met_events', 'moma_events', 'guggenheim_events', 'whitney_events', 'lincoln_center_events', 'carnegie_hall_events', 'nyphil_events', 'columbia_events', 'nyu_events'],
+            'chicago': ['chicago_events', 'uchicago_events', 'artic_events'],
+            'los angeles': ['la_events', 'ucla_events', 'usc_events', 'getty_events', 'lacma_events'],
+            'boston': ['boston_events', 'mit_events', 'harvard_events', 'bso_events'],
             'berkeley': ['berkeley_events'],
+            'seattle': ['seattle_events', 'uw_events'],
+            'austin': ['austin_events'],
+            'denver': ['denver_events'],
+            'portland': ['portland_events'],
+            'philadelphia': ['philadelphia_events'],
+            'dallas': ['dallas_events'],
+            'houston': ['houston_events'],
+            'miami': ['miami_events'],
+            'atlanta': ['atlanta_events'],
+            'phoenix': ['phoenix_events'],
+            'washington': ['kennedy_center_events', 'smithsonian_events'],
+            'dc': ['kennedy_center_events', 'smithsonian_events'],
+            'washington dc': ['kennedy_center_events', 'smithsonian_events'],
         }
         
         # Add city-specific APIs

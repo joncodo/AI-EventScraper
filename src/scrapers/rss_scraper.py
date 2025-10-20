@@ -20,42 +20,298 @@ class RSSEventScraper:
         self.platform_name = "rss_feeds"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # Curated list of reliable event RSS feeds
+        # Comprehensive curated list of reliable event RSS feeds
         self.event_rss_feeds = [
-            # University event feeds
+            # === MAJOR UNIVERSITIES ===
+            # Stanford University
             "https://events.stanford.edu/rss",
+            "https://events.stanford.edu/calendar.ics",
+            
+            # UC Berkeley
             "https://events.berkeley.edu/rss",
+            "https://events.berkeley.edu/calendar.ics",
+            
+            # MIT
             "https://events.mit.edu/rss",
+            "https://events.mit.edu/calendar.ics",
+            
+            # Harvard University
             "https://events.harvard.edu/rss",
+            "https://events.harvard.edu/calendar.ics",
+            
+            # Yale University
             "https://events.yale.edu/rss",
+            "https://events.yale.edu/calendar.ics",
             
-            # City government feeds
+            # Princeton University
+            "https://events.princeton.edu/rss",
+            "https://events.princeton.edu/calendar.ics",
+            
+            # Columbia University
+            "https://events.columbia.edu/rss",
+            "https://events.columbia.edu/calendar.ics",
+            
+            # University of Chicago
+            "https://events.uchicago.edu/rss",
+            "https://events.uchicago.edu/calendar.ics",
+            
+            # UCLA
+            "https://events.ucla.edu/rss",
+            "https://events.ucla.edu/calendar.ics",
+            
+            # University of Washington
+            "https://events.washington.edu/rss",
+            "https://events.washington.edu/calendar.ics",
+            
+            # === MAJOR CITIES ===
+            # San Francisco
             "https://www.sf.gov/rss/events",
+            "https://sf.gov/api/events/feed",
+            "https://www.sf.gov/events/feed",
+            
+            # New York City
             "https://www.nyc.gov/rss/events",
-            "https://www.lacity.org/rss/events",
+            "https://www1.nyc.gov/api/events/feed",
+            "https://www1.nyc.gov/events/feed",
+            
+            # Chicago
             "https://www.chicago.gov/rss/events",
+            "https://www.chicago.gov/api/events/feed",
+            "https://www.chicago.gov/events/feed",
             
-            # Museum and cultural feeds
+            # Los Angeles
+            "https://www.lacity.org/rss/events",
+            "https://www.lacity.org/api/events/feed",
+            "https://www.lacity.org/events/feed",
+            
+            # Boston
+            "https://www.boston.gov/rss/events",
+            "https://www.boston.gov/api/events/feed",
+            "https://www.boston.gov/events/feed",
+            
+            # Seattle
+            "https://www.seattle.gov/rss/events",
+            "https://www.seattle.gov/api/events/feed",
+            "https://www.seattle.gov/events/feed",
+            
+            # Austin
+            "https://www.austintexas.gov/rss/events",
+            "https://www.austintexas.gov/api/events/feed",
+            "https://www.austintexas.gov/events/feed",
+            
+            # Denver
+            "https://www.denvergov.org/rss/events",
+            "https://www.denvergov.org/api/events/feed",
+            "https://www.denvergov.org/events/feed",
+            
+            # Portland
+            "https://www.portlandoregon.gov/rss/events",
+            "https://www.portlandoregon.gov/api/events/feed",
+            "https://www.portlandoregon.gov/events/feed",
+            
+            # === MAJOR MUSEUMS & CULTURAL INSTITUTIONS ===
+            # Metropolitan Museum of Art
             "https://www.metmuseum.org/rss/events",
+            "https://www.metmuseum.org/api/events/feed",
+            "https://www.metmuseum.org/events/feed",
+            
+            # Museum of Modern Art (MoMA)
             "https://www.moma.org/rss/events",
+            "https://www.moma.org/api/events/feed",
+            "https://www.moma.org/events/feed",
+            
+            # SFMOMA
             "https://www.sfmoma.org/rss/events",
+            "https://www.sfmoma.org/api/events/feed",
+            "https://www.sfmoma.org/events/feed",
+            
+            # Getty Museum
             "https://www.getty.edu/rss/events",
+            "https://www.getty.edu/api/events/feed",
+            "https://www.getty.edu/events/feed",
             
-            # Conference and tech event feeds
+            # Smithsonian Institution
+            "https://www.si.edu/rss/events",
+            "https://www.si.edu/api/events/feed",
+            "https://www.si.edu/events/feed",
+            
+            # Guggenheim Museum
+            "https://www.guggenheim.org/rss/events",
+            "https://www.guggenheim.org/api/events/feed",
+            "https://www.guggenheim.org/events/feed",
+            
+            # Whitney Museum
+            "https://whitney.org/rss/events",
+            "https://whitney.org/api/events/feed",
+            "https://whitney.org/events/feed",
+            
+            # Art Institute of Chicago
+            "https://www.artic.edu/rss/events",
+            "https://www.artic.edu/api/events/feed",
+            "https://www.artic.edu/events/feed",
+            
+            # Los Angeles County Museum of Art
+            "https://www.lacma.org/rss/events",
+            "https://www.lacma.org/api/events/feed",
+            "https://www.lacma.org/events/feed",
+            
+            # === PERFORMING ARTS CENTERS ===
+            # Lincoln Center
+            "https://www.lincolncenter.org/rss/events",
+            "https://www.lincolncenter.org/api/events/feed",
+            "https://www.lincolncenter.org/events/feed",
+            
+            # Kennedy Center
+            "https://www.kennedy-center.org/rss/events",
+            "https://www.kennedy-center.org/api/events/feed",
+            "https://www.kennedy-center.org/events/feed",
+            
+            # Carnegie Hall
+            "https://www.carnegiehall.org/rss/events",
+            "https://www.carnegiehall.org/api/events/feed",
+            "https://www.carnegiehall.org/events/feed",
+            
+            # San Francisco Symphony
+            "https://www.sfsymphony.org/rss/events",
+            "https://www.sfsymphony.org/api/events/feed",
+            "https://www.sfsymphony.org/events/feed",
+            
+            # === CONFERENCE & TECH EVENTS ===
+            # O'Reilly Conferences
             "https://conferences.oreilly.com/rss",
-            "https://events.linuxfoundation.org/rss",
-            "https://www.techcrunch.com/events/rss",
+            "https://conferences.oreilly.com/events/feed",
             
-            # Local event aggregators
+            # Linux Foundation Events
+            "https://events.linuxfoundation.org/rss",
+            "https://events.linuxfoundation.org/events/feed",
+            
+            # TechCrunch Events
+            "https://www.techcrunch.com/events/rss",
+            "https://www.techcrunch.com/events/feed",
+            
+            # Google I/O
+            "https://events.google.com/io/rss",
+            "https://events.google.com/io/events/feed",
+            
+            # Microsoft Build
+            "https://events.microsoft.com/build/rss",
+            "https://events.microsoft.com/build/events/feed",
+            
+            # Apple WWDC
+            "https://developer.apple.com/wwdc/rss",
+            "https://developer.apple.com/wwdc/events/feed",
+            
+            # === LOCAL EVENT AGGREGATORS ===
+            # Eventbrite (official RSS)
             "https://www.eventbrite.com/rss",
+            "https://www.eventbrite.com/events/feed",
+            
+            # Meetup (official RSS)
             "https://www.meetup.com/rss",
+            "https://www.meetup.com/events/feed",
+            
+            # CitySpark (major aggregator)
+            "https://www.cityspark.com/eventlistings/feed",
+            "https://www.cityspark.com/events/feed",
+            
+            # Eventful
+            "https://eventful.com/events/feed",
+            "https://eventful.com/rss",
+            
+            # Zvents
+            "https://www.zvents.com/events/feed",
+            "https://www.zvents.com/rss",
+            
+            # === LOCAL NEWS & CULTURE ===
+            # New York Magazine (Vulture)
+            "https://www.vulture.com/rss",
+            "https://www.vulture.com/events/feed",
+            
+            # Village Voice
+            "https://www.villagevoice.com/rss",
+            "https://www.villagevoice.com/events/feed",
+            
+            # Time Out (major cities)
+            "https://www.timeout.com/newyork/rss",
+            "https://www.timeout.com/san-francisco/rss",
+            "https://www.timeout.com/chicago/rss",
+            "https://www.timeout.com/los-angeles/rss",
+            "https://www.timeout.com/boston/rss",
+            "https://www.timeout.com/seattle/rss",
+            
+            # Thrillist (events and activities)
+            "https://www.thrillist.com/rss",
+            "https://www.thrillist.com/events/feed",
+            
+            # === SPECIALIZED EVENT SOURCES ===
+            # Event Marketer
+            "https://www.eventmarketer.com/rss",
+            "https://www.eventmarketer.com/events/feed",
+            
+            # BizBash
+            "https://www.bizbash.com/rss",
+            "https://www.bizbash.com/events/feed",
+            
+            # Smart Meetings
+            "https://www.smartmeetings.com/rss",
+            "https://www.smartmeetings.com/events/feed",
+            
+            # === FESTIVAL & OUTDOOR EVENTS ===
+            # FestivalNet
+            "https://www.festivalnet.com/rss",
+            "https://www.festivalnet.com/events/feed",
+            
+            # Eventful Festivals
+            "https://eventful.com/festivals/feed",
+            "https://eventful.com/outdoor-events/feed",
         ]
         
         # iCal feeds (often more reliable than RSS)
         self.ical_feeds = [
-            "https://calendar.google.com/calendar/ical/your-calendar/public/basic.ics",
+            # === MAJOR UNIVERSITIES (iCal) ===
             "https://events.stanford.edu/calendar.ics",
             "https://events.berkeley.edu/calendar.ics",
+            "https://events.mit.edu/calendar.ics",
+            "https://events.harvard.edu/calendar.ics",
+            "https://events.yale.edu/calendar.ics",
+            "https://events.princeton.edu/calendar.ics",
+            "https://events.columbia.edu/calendar.ics",
+            "https://events.uchicago.edu/calendar.ics",
+            "https://events.ucla.edu/calendar.ics",
+            "https://events.washington.edu/calendar.ics",
+            
+            # === MAJOR CITIES (iCal) ===
+            "https://www.sf.gov/events/calendar.ics",
+            "https://www.nyc.gov/events/calendar.ics",
+            "https://www.chicago.gov/events/calendar.ics",
+            "https://www.lacity.org/events/calendar.ics",
+            "https://www.boston.gov/events/calendar.ics",
+            "https://www.seattle.gov/events/calendar.ics",
+            "https://www.austintexas.gov/events/calendar.ics",
+            "https://www.denvergov.org/events/calendar.ics",
+            "https://www.portlandoregon.gov/events/calendar.ics",
+            
+            # === MUSEUMS & CULTURAL (iCal) ===
+            "https://www.metmuseum.org/events/calendar.ics",
+            "https://www.moma.org/events/calendar.ics",
+            "https://www.sfmoma.org/events/calendar.ics",
+            "https://www.getty.edu/events/calendar.ics",
+            "https://www.si.edu/events/calendar.ics",
+            "https://www.guggenheim.org/events/calendar.ics",
+            "https://whitney.org/events/calendar.ics",
+            "https://www.artic.edu/events/calendar.ics",
+            "https://www.lacma.org/events/calendar.ics",
+            
+            # === PERFORMING ARTS (iCal) ===
+            "https://www.lincolncenter.org/events/calendar.ics",
+            "https://www.kennedy-center.org/events/calendar.ics",
+            "https://www.carnegiehall.org/events/calendar.ics",
+            "https://www.sfsymphony.org/events/calendar.ics",
+            
+            # === PUBLIC CALENDARS ===
+            "https://calendar.google.com/calendar/ical/en.usa%23holiday%40group.v.calendar.google.com/public/basic.ics",  # US Holidays
+            "https://calendar.google.com/calendar/ical/calendar%40sfmoma.org/public/basic.ics",  # SFMOMA
+            "https://calendar.google.com/calendar/ical/events%40metmuseum.org/public/basic.ics",  # Met Museum
         ]
     
     async def __aenter__(self):
