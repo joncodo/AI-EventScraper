@@ -17,10 +17,17 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements-railway.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with multiple methods for critical packages
+RUN pip install --no-cache-dir -r requirements-railway.txt
+
+# Install critical dependencies with multiple fallback methods
+RUN pip install --no-cache-dir feedparser==6.0.10 icalendar==5.0.11 || \
+    pip install --no-cache-dir --force-reinstall feedparser icalendar || \
+    pip install --no-cache-dir --no-deps feedparser icalendar || \
+    pip install --no-cache-dir sgmllib3k python-dateutil pytz lxml || \
+    echo "Some dependencies may need runtime installation"
 
 # Copy application code
 COPY . .
@@ -35,7 +42,7 @@ EXPOSE 8000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/ping || exit 1
 
-# Default command
-CMD ["python", "api_server.py", "--host", "0.0.0.0", "--port", "8000"]
+# Default command - run startup deps check then main app
+CMD ["sh", "-c", "python startup_deps.py && python railway_complete.py"]
