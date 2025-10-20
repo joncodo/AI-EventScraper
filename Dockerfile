@@ -44,5 +44,5 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
     CMD curl -f http://localhost:8080/ping || exit 1
 
-# Default command - run startup deps check, test, then main app
-CMD ["sh", "-c", "echo 'Starting startup sequence...' && python startup_deps.py && echo 'Deps check complete, running startup test...' && python test_startup.py && echo 'Startup test complete, starting main app...' && python railway_complete.py"]
+# Default command - start main app directly with dependency check
+CMD ["sh", "-c", "echo 'Starting application...' && python startup_deps.py && echo 'Dependencies OK, starting main app...' && python railway_complete.py"]

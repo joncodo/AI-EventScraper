@@ -40,6 +40,7 @@ def main():
         except ImportError as e:
             print(f"❌ icalendar import failed: {e}")
         
+        print("✅ Startup dependency check completed (with warnings)")
         return 0  # Don't fail startup, let the app handle it
             
     except Exception as e:
