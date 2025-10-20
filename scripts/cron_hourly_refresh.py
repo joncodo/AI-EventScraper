@@ -157,16 +157,31 @@ async def refresh_city(scraper_manager, city: str, country: str = "United States
 
 async def run_hourly_refresh():
     """Main entry for the hourly refresh job."""
-    logger.info("[cron] Starting hourly refresh job")
+    logger.info("[cron] ============================================")
+    logger.info("[cron] STARTING HOURLY REFRESH JOB")
+    logger.info("[cron] ============================================")
 
-    # Ensure DB connection
-    await db.connect()
+    try:
+        # Ensure DB connection
+        logger.info("[cron] 🔗 Connecting to database...")
+        await db.connect()
+        logger.info("[cron] ✅ Database connected successfully")
 
-    # Resolve top cities, bias towards where users are likely to watch
-    top_cities = await get_top_cities(limit=int(os.getenv("CRON_TOP_CITIES_LIMIT", "12")))
-    logger.info(f"[cron] Top cities to refresh: {top_cities}")
+        # Resolve top cities, bias towards where users are likely to watch
+        logger.info("[cron] 🏙️ Getting top cities to refresh...")
+        top_cities = await get_top_cities(limit=int(os.getenv("CRON_TOP_CITIES_LIMIT", "12")))
+        logger.info(f"[cron] ✅ Top cities to refresh: {top_cities}")
 
-    scraper_manager = enhanced_scraper_manager
+        logger.info("[cron] 🔧 Initializing scraper manager...")
+        scraper_manager = enhanced_scraper_manager
+        logger.info("[cron] ✅ Scraper manager initialized")
+        
+    except Exception as e:
+        logger.error(f"[cron] ❌ Error in hourly refresh setup: {e}")
+        logger.error(f"[cron] ❌ Error type: {type(e).__name__}")
+        import traceback
+        logger.error(f"[cron] ❌ Traceback: {traceback.format_exc()}")
+        raise
 
     # Limit concurrent city refreshes to avoid rate limits
     semaphore = asyncio.Semaphore(int(os.getenv("CRON_CITY_CONCURRENCY", "2")))
@@ -204,22 +219,38 @@ async def run_hourly_refresh():
                 return 0
             return await refresh_city(scraper_manager, city_name)
 
+    logger.info(f"[cron] 🚀 Starting concurrent city refresh for {len(top_cities)} cities...")
     tasks = [sem_task(city) for city in top_cities]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     total = 0
-    for r in results:
+    successful_cities = 0
+    failed_cities = 0
+    
+    for i, r in enumerate(results):
+        city_name = top_cities[i] if i < len(top_cities) else f"Unknown-{i}"
         if isinstance(r, Exception):
-            logger.error(f"Task error: {r}")
+            logger.error(f"[cron] ❌ Task error for city '{city_name}': {r}")
+            failed_cities += 1
         else:
             total += int(r)
+            successful_cities += 1
+            logger.info(f"[cron] ✅ City '{city_name}': {r} events processed")
 
-    logger.info(f"[cron] Refresh complete. Cities processed: {len(top_cities)}; total saved/updated events: {total}")
+    logger.info(f"[cron] ============================================")
+    logger.info(f"[cron] HOURLY REFRESH COMPLETE")
+    logger.info(f"[cron] Cities processed: {len(top_cities)}")
+    logger.info(f"[cron] Successful cities: {successful_cities}")
+    logger.info(f"[cron] Failed cities: {failed_cities}")
+    logger.info(f"[cron] Total events saved/updated: {total}")
+    logger.info(f"[cron] ============================================")
 
     try:
+        logger.info("[cron] 🔌 Disconnecting from database...")
         await db.disconnect()
-    except Exception:
-        pass
+        logger.info("[cron] ✅ Database disconnected")
+    except Exception as e:
+        logger.warning(f"[cron] ⚠️ Error disconnecting from database: {e}")
 
 
 def main():

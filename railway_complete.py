@@ -84,17 +84,29 @@ async def lifespan(app: FastAPI):
         print("⚠️ Database connection failed - continuing without DB")
 
     print("\n🔍 Step 3: Background worker initialization...")
+    logger.info("🔍 Step 3: Background worker initialization...")
+    
     # Start continuous background refresh worker
     if worker is None:
         try:
+            logger.info("🔧 Creating BackgroundRefreshWorker instance...")
             worker = BackgroundRefreshWorker()
+            logger.info("✅ BackgroundRefreshWorker instance created")
+            
+            logger.info("🚀 Starting background worker...")
             worker.start()
             logger.info("[worker] Background refresh worker started from railway_complete")
             print("✅ Background worker started successfully")
         except Exception as e:
             logger.error(f"❌ Failed to start background worker: {e}")
+            logger.error(f"❌ Error type: {type(e).__name__}")
+            import traceback
+            logger.error(f"❌ Traceback: {traceback.format_exc()}")
             print(f"❌ Background worker failed to start: {e}")
             worker = None
+    else:
+        logger.warning("⚠️ Background worker already exists, skipping initialization")
+        print("⚠️ Background worker already exists")
 
     print("\n✅ ============================================")
     print("✅ FASTAPI APPLICATION STARTUP COMPLETE")
