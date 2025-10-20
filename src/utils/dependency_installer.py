@@ -12,7 +12,7 @@ CRITICAL_DEPENDENCIES = [
     ("feedparser", "6.0.10"),
     ("icalendar", "5.0.11"),
     ("sgmllib3k", "1.0.0"),
-    ("python-dateutil", "2.8.0"),
+    ("dateutil", "2.8.0"),  # python-dateutil imports as dateutil
     ("pytz", "2023.3"),
     ("lxml", "4.9.0"),
 ]
@@ -20,7 +20,9 @@ CRITICAL_DEPENDENCIES = [
 def install_package(package_name: str, version: str = None) -> bool:
     """Install a package using pip."""
     try:
-        package_spec = f"{package_name}=={version}" if version else package_name
+        # Special case for dateutil - install as python-dateutil
+        install_name = "python-dateutil" if package_name == "dateutil" else package_name
+        package_spec = f"{install_name}=={version}" if version else install_name
         logger.info(f"Installing {package_spec}...")
         
         result = subprocess.run([
@@ -114,7 +116,9 @@ def install_with_fallback(package_name: str, version: str = None) -> bool:
 def install_package_no_deps(package_name: str, version: str = None) -> bool:
     """Install package without dependencies."""
     try:
-        package_spec = f"{package_name}=={version}" if version else package_name
+        # Special case for dateutil - install as python-dateutil
+        install_name = "python-dateutil" if package_name == "dateutil" else package_name
+        package_spec = f"{install_name}=={version}" if version else install_name
         logger.info(f"Installing {package_spec} without dependencies...")
         
         result = subprocess.run([
