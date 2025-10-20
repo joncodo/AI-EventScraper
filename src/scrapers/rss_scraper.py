@@ -51,33 +51,12 @@ class RSSEventScraper:
         self.platform_name = "rss_feeds"
         self.session: Optional[aiohttp.ClientSession] = None
         
-        # Curated list of ACTUAL EVENT RSS feeds only
+        # TEMPORARILY DISABLED - Only use verified working event feeds
         self.event_rss_feeds = [
-            # === REAL EVENT FEEDS ONLY ===
-            # Eventbrite event feeds (city-specific)
+            # === VERIFIED WORKING EVENT FEEDS ONLY ===
+            # Only keeping feeds that we know work and contain real events
             "https://www.eventbrite.com/rss/events/",  # General Eventbrite events
-            "https://www.eventbrite.com/rss/events/?location=new-york",  # NYC events
-            "https://www.eventbrite.com/rss/events/?location=los-angeles",  # LA events
-            "https://www.eventbrite.com/rss/events/?location=chicago",  # Chicago events
-            "https://www.eventbrite.com/rss/events/?location=san-francisco",  # SF events
-            
-            # Meetup event feeds
             "https://www.meetup.com/events/rss/",  # General Meetup events
-            "https://www.meetup.com/events/rss/?location=new-york",  # NYC Meetup events
-            "https://www.meetup.com/events/rss/?location=los-angeles",  # LA Meetup events
-            
-            # Conference and event aggregator feeds
-            "https://lanyrd.com/feeds/",  # Lanyrd events (if still active)
-            "https://www.eventful.com/rss/events",  # Eventful events
-            
-            # Tech conference feeds
-            "https://conferences.oreilly.com/rss",  # O'Reilly conferences
-            "https://www.techcrunch.com/events/rss/",  # TechCrunch events
-            
-            # Local event feeds (city-specific)
-            "https://www.timeout.com/newyork/rss",  # TimeOut NYC events
-            "https://www.timeout.com/los-angeles/rss",  # TimeOut LA events
-            "https://www.timeout.com/chicago/rss",  # TimeOut Chicago events
         ]
         
         # iCal feeds (often more reliable than RSS)
@@ -364,6 +343,8 @@ class RSSEventScraper:
             'supplements', 'health', 'wellness', 'blockchain',
             'cryptocurrency', 'nft', 'grammarly', 'prowritingaid',
             'collagen', 'skin care', 'affiliate', 'commission',
+            'copy.ai', 'hotpot.ai', 'deep-nostalgia', 'pfpmaker',
+            'brandmark', 'lumen5', 'namelix', 'bigjpg',
             
             # News indicators
             'breaking news', 'reports', 'announces', 'launches',
@@ -372,7 +353,12 @@ class RSSEventScraper:
             
             # Article indicators
             'read more', 'continue reading', 'full article',
-            'blog post', 'opinion', 'analysis', 'commentary'
+            'blog post', 'opinion', 'analysis', 'commentary',
+            'techncruncher.blogspot.com', 'blogspot', 'blog',
+            
+            # Tech article indicators
+            'free ai tools', 'ai tools that make', 'tools that make your life',
+            'make your life easier', 'free tools', 'ai based'
         ]
         
         # Check for non-event keywords
