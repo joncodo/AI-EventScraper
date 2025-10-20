@@ -240,13 +240,19 @@ class EnhancedScraperManager:
         # Find duplicates
         duplicates = await ai_processor.find_duplicates(events, similarity_threshold=0.8)
         
-        # Create a set of events to remove
+        # Create a set of event indices to remove (since Event objects are not hashable)
         events_to_remove = set()
         merged_events = []
         
+        # Create a mapping from events to their indices
+        event_to_index = {id(event): i for i, event in enumerate(events)}
+        
         # Process duplicates
         for event1, event2, similarity in duplicates:
-            if event1 in events_to_remove or event2 in events_to_remove:
+            event1_idx = event_to_index.get(id(event1))
+            event2_idx = event_to_index.get(id(event2))
+            
+            if event1_idx in events_to_remove or event2_idx in events_to_remove:
                 continue
             
             # Merge events (keep the one with more sources or better data)
@@ -262,12 +268,12 @@ class EnhancedScraperManager:
             merged_events.append(merged_event)
             
             # Mark both original events for removal
-            events_to_remove.add(event1)
-            events_to_remove.add(event2)
+            events_to_remove.add(event1_idx)
+            events_to_remove.add(event2_idx)
         
         # Add non-duplicate events
-        for event in events:
-            if event not in events_to_remove:
+        for i, event in enumerate(events):
+            if i not in events_to_remove:
                 merged_events.append(event)
         
         logger.info(f"Deduplication completed. {len(merged_events)} unique events remaining.")
