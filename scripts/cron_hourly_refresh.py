@@ -28,18 +28,21 @@ sys.path.insert(0, str(src_path))
 
 from core.database import db  # noqa: E402
 from core.models import ScrapeRequest  # noqa: E402
-try:
-    from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
-except ImportError:
-    # Fallback to regular scraper manager if enhanced version fails
-    from scrapers.scraper_manager import scraper_manager as enhanced_scraper_manager  # noqa: E402
-
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger("cron_hourly_refresh")
+
+try:
+    from scrapers.enhanced_scraper_manager import enhanced_scraper_manager  # noqa: E402
+    logger.info("Using enhanced scraper manager")
+except ImportError as e:
+    logger.warning(f"Enhanced scraper manager not available: {e}")
+    # Fallback to regular scraper manager if enhanced version fails
+    from scrapers.scraper_manager import scraper_manager as enhanced_scraper_manager  # noqa: E402
+    logger.info("Using regular scraper manager as fallback")
 
 
 DEFAULT_FALLBACK_CITIES: List[str] = [
@@ -113,7 +116,7 @@ def _popularity_score_from_text(text: str) -> int:
     return score
 
 
-async def refresh_city(scraper_manager: ScraperManager, city: str, country: str = "United States") -> int:
+async def refresh_city(scraper_manager, city: str, country: str = "United States") -> int:
     """Scrape and upsert events for a single city. Returns number of saved/updated events."""
     try:
         logger.info(f"[cron] Begin city refresh: city='{city}', country='{country}'")

@@ -1,10 +1,20 @@
 """Enhanced scraper manager with stealth capabilities."""
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from datetime import datetime
 
 from .base_scraper import BaseScraper
+from .meetup_scraper import MeetupScraper
+from .facebook_scraper import FacebookScraper
+from core.models import Event, ScrapeRequest
+from ai.ai_processor import ai_processor
+from core.database import db
+
+# Initialize logger after imports
+logger = logging.getLogger(__name__)
+
+# Try to import enhanced scrapers with fallbacks
 try:
     from .enhanced_eventbrite_scraper import EnhancedEventbriteScraper
     ENHANCED_EVENTBRITE_AVAILABLE = True
@@ -17,8 +27,7 @@ except ImportError as e:
             self.platform_name = "eventbrite"
         async def scrape_events(self, *args, **kwargs):
             return []
-from .meetup_scraper import MeetupScraper
-from .facebook_scraper import FacebookScraper
+
 try:
     from .rss_scraper import RSSEventScraper
     from .api_scraper import APIEventScraper
@@ -45,11 +54,6 @@ except ImportError as e:
             self.platform_name = "local_events"
         async def scrape_events(self, *args, **kwargs):
             return []
-from core.models import Event, ScrapeRequest
-from ai.ai_processor import ai_processor
-from core.database import db
-
-logger = logging.getLogger(__name__)
 
 
 class EnhancedScraperManager:
@@ -274,7 +278,7 @@ class EnhancedScraperManager:
                     existing_event.updated_at = datetime.utcnow()
                     
                     # Update in database
-                    await db.update_event(str(existing_event.id), existing_event.dict())
+                    await db.update_event(str(existing_event.id), existing_event.model_dump())
                     existing_events.append(str(existing_event.id))
                 else:
                     new_events.append(event)
