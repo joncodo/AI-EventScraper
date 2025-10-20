@@ -52,6 +52,8 @@ class EnhancedScraperManager:
         
         logger.info(f"🚀 Enhanced scraper manager starting for {request.city}, {request.country}")
         logger.info(f"📊 Available scrapers: {len(self.alternative_scrapers)} alternative, {len(self.enhanced_scrapers)} enhanced, {len(self.regular_scrapers)} regular")
+        logger.info(f"📅 Date range: {request.start_date} to {request.end_date}")
+        logger.info(f"📍 Location: {request.city}, {request.country} (radius: {request.radius_km}km)")
         
         # Create semaphore to limit concurrent requests (more conservative)
         semaphore = asyncio.Semaphore(3)  # Max 3 scrapers running at once
@@ -59,6 +61,7 @@ class EnhancedScraperManager:
         async def scrape_alternative_with_semaphore(scraper):
             async with semaphore:
                 try:
+                    logger.info(f"🔍 Starting alternative scraper: {scraper.platform_name}")
                     # Initialize session for alternative scrapers that need it
                     if hasattr(scraper, '__aenter__') and hasattr(scraper, '__aexit__'):
                         async with scraper:
@@ -77,10 +80,15 @@ class EnhancedScraperManager:
                             start_date=request.start_date,
                             end_date=request.end_date
                         )
-                    logger.info(f"Alternative scraper found {len(events)} events from {scraper.platform_name}")
+                    logger.info(f"✅ Alternative scraper {scraper.platform_name} found {len(events)} events")
+                    if events:
+                        logger.info(f"📋 Sample event from {scraper.platform_name}: {events[0].title if events[0].title else 'No title'}")
                     return events
                 except Exception as e:
-                    logger.error(f"Error with alternative scraper {scraper.platform_name}: {e}")
+                    logger.error(f"❌ Error with alternative scraper {scraper.platform_name}: {e}")
+                    logger.error(f"❌ Error type: {type(e).__name__}")
+                    import traceback
+                    logger.error(f"❌ Traceback: {traceback.format_exc()}")
                     return []
         
         async def scrape_enhanced_with_semaphore(scraper):
@@ -128,15 +136,22 @@ class EnhancedScraperManager:
                     return []
         
         # Run alternative scrapers first (most reliable)
+        logger.info(f"🚀 Starting {len(self.alternative_scrapers)} alternative scrapers...")
         alternative_tasks = [scrape_alternative_with_semaphore(scraper) for scraper in self.alternative_scrapers]
         alternative_results = await asyncio.gather(*alternative_tasks, return_exceptions=True)
         
         # Collect alternative scraper results
-        for result in alternative_results:
+        alternative_events = 0
+        for i, result in enumerate(alternative_results):
+            scraper_name = self.alternative_scrapers[i].platform_name if i < len(self.alternative_scrapers) else f"Unknown-{i}"
             if isinstance(result, list):
                 all_events.extend(result)
+                alternative_events += len(result)
+                logger.info(f"📊 Alternative scraper {scraper_name} contributed {len(result)} events")
             elif isinstance(result, Exception):
-                logger.error(f"Alternative scraper task failed: {result}")
+                logger.error(f"❌ Alternative scraper {scraper_name} task failed: {result}")
+        
+        logger.info(f"📈 Alternative scrapers total: {alternative_events} events")
         
         # Run enhanced scrapers (stealth web scraping)
         enhanced_tasks = [scrape_enhanced_with_semaphore(scraper) for scraper in self.enhanced_scrapers]
@@ -166,14 +181,25 @@ class EnhancedScraperManager:
             elif isinstance(result, Exception):
                 logger.error(f"Regular scraper task failed: {result}")
         
-        logger.info(f"Total events scraped: {len(all_events)}")
+        logger.info(f"🎯 Total events scraped from all sources: {len(all_events)}")
+        
+        if not all_events:
+            logger.warning("⚠️ No events found from any scraper - this may indicate:")
+            logger.warning("   - All data sources are blocked or returning errors")
+            logger.warning("   - Date range is too restrictive")
+            logger.warning("   - Location parameters are invalid")
+            logger.warning("   - Network connectivity issues")
+            return []
         
         # Process events with AI
+        logger.info(f"🤖 Processing {len(all_events)} events with AI...")
         processed_events = await self._process_events_with_ai(all_events)
         
         # Find and merge duplicates
+        logger.info(f"🔍 Deduplicating {len(processed_events)} processed events...")
         deduplicated_events = await self._deduplicate_events(processed_events)
         
+        logger.info(f"✅ Final result: {len(deduplicated_events)} unique events ready for database")
         return deduplicated_events
     
     async def _process_events_with_ai(self, events: List[Event]) -> List[Event]:

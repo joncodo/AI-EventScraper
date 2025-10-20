@@ -399,6 +399,11 @@ class RSSEventScraper:
         """Scrape events from RSS and iCal feeds."""
         events = []
         
+        logger.info(f"🔍 Starting RSS/iCal scraping for {city}, {country}")
+        logger.info(f"📅 Date range: {start_date} to {end_date}")
+        logger.info(f"📍 Radius: {radius_km}km")
+        logger.info(f"📊 Available feeds: {len(self.event_rss_feeds)} RSS, {len(self.event_ical_feeds)} iCal")
+        
         # Check if dependencies are available
         if not ATOMA_AVAILABLE and not ICALENDAR_AVAILABLE:
             logger.warning("Neither atoma nor icalendar available - RSS scraper disabled")
@@ -406,19 +411,23 @@ class RSSEventScraper:
         
         # Scrape RSS feeds if available
         if ATOMA_AVAILABLE:
+            logger.info(f"🚀 Starting RSS scraping with {len(self.event_rss_feeds)} feeds...")
             rss_events = await self._scrape_rss_feeds(city, country, start_date, end_date)
             events.extend(rss_events)
+            logger.info(f"✅ RSS scraping completed: {len(rss_events)} events found")
         else:
             logger.info("RSS scraping disabled - atoma not available")
         
         # Scrape iCal feeds if available
         if ICALENDAR_AVAILABLE:
+            logger.info(f"🚀 Starting iCal scraping with {len(self.event_ical_feeds)} feeds...")
             ical_events = await self._scrape_ical_feeds(city, country, start_date, end_date)
             events.extend(ical_events)
+            logger.info(f"✅ iCal scraping completed: {len(ical_events)} events found")
         else:
             logger.info("iCal scraping disabled - icalendar not available")
         
-        logger.info(f"RSS/iCal scraper found {len(events)} events")
+        logger.info(f"🎯 RSS/iCal scraper total: {len(events)} events")
         return events
     
     async def _scrape_rss_feeds(
@@ -435,9 +444,13 @@ class RSSEventScraper:
             logger.warning("atoma not available - RSS scraping disabled")
             return events
         
-        for feed_url in self.event_rss_feeds:
+        logger.info(f"🔍 Processing {len(self.event_rss_feeds)} RSS feeds...")
+        successful_feeds = 0
+        failed_feeds = 0
+        
+        for i, feed_url in enumerate(self.event_rss_feeds, 1):
             try:
-                logger.info(f"Scraping RSS feed: {feed_url}")
+                logger.info(f"📡 [{i}/{len(self.event_rss_feeds)}] Scraping RSS feed: {feed_url}")
                 
                 # Add small delay to avoid rate limiting
                 await asyncio.sleep(0.5)
@@ -503,10 +516,17 @@ class RSSEventScraper:
                         continue
                 
                 logger.info(f"Found {len([e for e in events if e.sources[0].url == feed_url])} events in {feed_url}")
+                successful_feeds += 1
                 
             except Exception as e:
-                logger.error(f"Error scraping RSS feed {feed_url}: {e}")
+                logger.error(f"❌ Error scraping RSS feed {feed_url}: {e}")
+                failed_feeds += 1
                 continue
+        
+        logger.info(f"📊 RSS feed processing complete:")
+        logger.info(f"   ✅ Successful feeds: {successful_feeds}")
+        logger.info(f"   ❌ Failed feeds: {failed_feeds}")
+        logger.info(f"   📈 Total events found: {len(events)}")
         
         return events
     
