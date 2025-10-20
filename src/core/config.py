@@ -37,6 +37,18 @@ class Settings(BaseSettings):
     openai_max_tokens: int = 1000
     openai_temperature: float = 0.3
     
+    # Event Platform API Keys
+    eventbrite_api_key: Optional[str] = None
+    meetup_api_key: Optional[str] = None
+    facebook_api_key: Optional[str] = None
+    google_api_key: Optional[str] = None
+    
+    # Additional API Keys
+    newsapi_key: Optional[str] = None
+    prnewswire_api_key: Optional[str] = None
+    cityspark_api_key: Optional[str] = None
+    eventful_api_key: Optional[str] = None
+    
     # Scraping Configuration - Scalable Settings
     default_radius_km: int = 100
     max_concurrent_requests: int = 50  # Increased for better performance

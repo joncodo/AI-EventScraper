@@ -138,8 +138,7 @@ class APIEventScraper:
             # Build request parameters
             params = {
                 'token': api_config['api_key'],
-                'location.address': f"{city}, {country}",
-                'location.within': f"{radius_km}km",
+                'q': f"{city} {country}",
                 'expand': 'venue,organizer',
                 'status': 'live',
                 'order_by': 'start_asc'
@@ -150,8 +149,8 @@ class APIEventScraper:
             if end_date:
                 params['start_date.range_end'] = end_date.isoformat()
             
-            # Make API request
-            url = api_config['base_url'] + api_config['endpoint']
+            # Make API request - use the correct endpoint
+            url = "https://www.eventbriteapi.com/v3/events/search/"
             async with self.session.get(url, params=params) as response:
                 if response.status != 200:
                     logger.warning(f"Eventbrite API returned status {response.status}")
