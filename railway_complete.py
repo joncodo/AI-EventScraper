@@ -465,12 +465,65 @@ async def search_events(
     offset: int = Query(0, ge=0)
 ):
     """Search events by title, description, or tags."""
-    return {"message": "Search events endpoint working", "query": q, "limit": limit}
+    if not db_connected or db_database is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        # Build search query using the same pattern as /events
+        search_query = {
+            "$or": [
+                {"title": {"$regex": q, "$options": "i"}},
+                {"description": {"$regex": q, "$options": "i"}},
+                {"category": {"$regex": q, "$options": "i"}}
+            ]
+        }
+        
+        # Get events using the same pattern as /events
+        events = []
+        async for event_doc in db_database.events.find(search_query).skip(offset).limit(limit):
+            if '_id' in event_doc:
+                event_doc['_id'] = str(event_doc['_id'])
+            events.append(event_doc)
+        
+        # Get total count
+        total_count = await db_database.events.count_documents(search_query)
+        
+        return {
+            "events": events,
+            "total": total_count,
+            "query": q,
+            "limit": limit,
+            "offset": offset,
+            "database_connected": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Error searching events: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.get("/events/random")
 async def get_random_events(limit: int = Query(5, ge=1, le=20)):
     """Get random events."""
-    return {"message": "Random events endpoint working", "limit": limit}
+    if not db_connected or db_database is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        # Get random events using the same pattern as /events
+        events = []
+        async for event_doc in db_database.events.find({}).limit(limit):
+            if '_id' in event_doc:
+                event_doc['_id'] = str(event_doc['_id'])
+            events.append(event_doc)
+        
+        return {
+            "events": events,
+            "count": len(events),
+            "database_connected": True
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting random events: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @app.get("/events/recent")
 async def get_recent_events(
@@ -772,7 +825,62 @@ async def export_events(
     city: Optional[str] = Query(None, description="Filter by city")
 ):
     """Export events in JSON or CSV format."""
-    return {"message": "Export endpoint working", "format": format, "limit": limit}
+    if not db_connected or db_database is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+    
+    try:
+        # Build query using the same pattern as /events
+        query = {}
+        
+        if category:
+            query["category"] = {"$regex": category, "$options": "i"}
+        
+        if city:
+            query["location.city"] = {"$regex": city, "$options": "i"}
+        
+        # Get events using the same pattern as /events
+        events = []
+        async for event_doc in db_database.events.find(query).limit(limit):
+            if '_id' in event_doc:
+                event_doc['_id'] = str(event_doc['_id'])
+            events.append(event_doc)
+        
+        if format == "csv":
+            # Convert to CSV format
+            import csv
+            import io
+            
+            if not events:
+                return {"message": "No events found", "count": 0}
+            
+            # Get all unique keys
+            all_keys = set()
+            for event in events:
+                all_keys.update(event.keys())
+            
+            # Create CSV
+            output = io.StringIO()
+            writer = csv.DictWriter(output, fieldnames=sorted(all_keys))
+            writer.writeheader()
+            writer.writerows(events)
+            
+            return {
+                "format": "csv",
+                "data": output.getvalue(),
+                "count": len(events),
+                "database_connected": True
+            }
+        else:
+            return {
+                "format": "json",
+                "events": events,
+                "count": len(events),
+                "database_connected": True
+            }
+        
+    except Exception as e:
+        logger.error(f"Error exporting events: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 if __name__ == "__main__":
     # Railway sets PORT environment variable
