@@ -469,14 +469,8 @@ async def search_events(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Simple search query for now
-        search_query = {
-            "$or": [
-                {"title": {"$regex": q, "$options": "i"}},
-                {"description": {"$regex": q, "$options": "i"}},
-                {"category": {"$regex": q, "$options": "i"}}
-            ]
-        }
+        # Very simple search query
+        search_query = {"title": {"$regex": q, "$options": "i"}}
         
         # Get events
         events = []
@@ -829,12 +823,12 @@ async def export_events(
         raise HTTPException(status_code=503, detail="Database not available")
     
     try:
-        # Build query
+        # Build simple query
         query = {}
         if category:
-            query["category"] = {"$regex": category, "$options": "i"}
+            query["category"] = category
         if city:
-            query["location.city"] = {"$regex": city, "$options": "i"}
+            query["location.city"] = city
         
         # Get events
         events = []
