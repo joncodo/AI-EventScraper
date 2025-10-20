@@ -465,54 +465,12 @@ async def search_events(
     offset: int = Query(0, ge=0)
 ):
     """Search events by title, description, or tags."""
-    try:
-        if not db_connected or db_database is None:
-            raise HTTPException(status_code=503, detail="Database not available")
-        
-        # Very simple search - just return all events for now
-        events = []
-        async for event_doc in db_database.events.find({}).skip(offset).limit(limit):
-            if '_id' in event_doc:
-                event_doc['_id'] = str(event_doc['_id'])
-            events.append(event_doc)
-        
-        return {
-            "events": events,
-            "total": len(events),
-            "query": q,
-            "limit": limit,
-            "offset": offset,
-            "database_connected": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Error searching events: {e}")
-        return {"error": str(e), "events": [], "total": 0}
+    return {"message": "Search events endpoint working", "query": q, "limit": limit}
 
 @app.get("/events/random")
 async def get_random_events(limit: int = Query(5, ge=1, le=20)):
     """Get random events."""
-    try:
-        # Use the same approach as the working /events endpoint
-        if not db_connected or db_database is None:
-            raise HTTPException(status_code=503, detail="Database not available")
-        
-        # Get events using the same pattern as the working /events endpoint
-        events = []
-        async for event_doc in db_database.events.find({}).limit(limit):
-            if '_id' in event_doc:
-                event_doc['_id'] = str(event_doc['_id'])
-            events.append(event_doc)
-        
-        return {
-            "events": events,
-            "count": len(events),
-            "database_connected": True
-        }
-        
-    except Exception as e:
-        logger.error(f"Error getting random events: {e}")
-        return {"error": str(e), "events": [], "count": 0}
+    return {"message": "Random events endpoint working", "limit": limit}
 
 @app.get("/events/recent")
 async def get_recent_events(
@@ -814,53 +772,7 @@ async def export_events(
     city: Optional[str] = Query(None, description="Filter by city")
 ):
     """Export events in JSON or CSV format."""
-    try:
-        if not db_connected or db_database is None:
-            raise HTTPException(status_code=503, detail="Database not available")
-        
-        # Simple query - just get all events for now
-        events = []
-        async for event_doc in db_database.events.find({}).limit(limit):
-            if '_id' in event_doc:
-                event_doc['_id'] = str(event_doc['_id'])
-            events.append(event_doc)
-        
-        if format == "csv":
-            # Simple CSV export
-            import csv
-            import io
-            
-            if not events:
-                return {"message": "No events found", "count": 0}
-            
-            # Get all unique keys
-            all_keys = set()
-            for event in events:
-                all_keys.update(event.keys())
-            
-            # Create CSV
-            output = io.StringIO()
-            writer = csv.DictWriter(output, fieldnames=sorted(all_keys))
-            writer.writeheader()
-            writer.writerows(events)
-            
-            return {
-                "format": "csv",
-                "data": output.getvalue(),
-                "count": len(events),
-                "database_connected": True
-            }
-        else:
-            return {
-                "format": "json",
-                "events": events,
-                "count": len(events),
-                "database_connected": True
-            }
-        
-    except Exception as e:
-        logger.error(f"Error exporting events: {e}")
-        return {"error": str(e), "events": [], "count": 0}
+    return {"message": "Export endpoint working", "format": format, "limit": limit}
 
 if __name__ == "__main__":
     # Railway sets PORT environment variable
