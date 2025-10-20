@@ -361,6 +361,10 @@ class RSSEventScraper:
                 except:
                     pass
             
+            # If no date found, use current date as fallback
+            if event_date is None:
+                event_date = datetime.utcnow()
+            
             # Extract location from description or title
             location_text = self._extract_location_from_text(f"{title} {description}")
             venue_name = location_text if location_text else "TBD"
