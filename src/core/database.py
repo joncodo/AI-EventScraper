@@ -1,5 +1,6 @@
 """Database connection and operations for the AI Event Scraper."""
 from typing import List, Optional, Dict, Any
+import os
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from datetime import datetime, timedelta
@@ -22,8 +23,10 @@ class Database:
     async def connect(self):
         """Connect to MongoDB."""
         try:
-            # Use mongodb_uri if available (for cloud deployments), otherwise use mongodb_url
-            connection_string = settings.mongodb_uri or settings.mongodb_url
+            # Resolve connection string (ENV override → settings.mongodb_uri → settings.mongodb_url)
+            env_uri = os.getenv("MONGODB_URI") or os.getenv("EVENT_SCRAPER_MONGODB_URI")
+            connection_string = env_uri or settings.mongodb_uri or settings.mongodb_url
+            logger.info(f"Connecting to MongoDB (prefix): {str(connection_string)[:50]}...")
             self.client = AsyncIOMotorClient(connection_string)
             self.db = self.client[settings.mongodb_database]
             
