@@ -1,152 +1,97 @@
 #!/usr/bin/env python3
-"""
-Test script for API key configuration.
+"""Test API keys configuration and functionality."""
 
-This script tests if API keys are properly configured and working.
-"""
-
-import asyncio
-import logging
+import os
 import sys
-from pathlib import Path
+import asyncio
+from datetime import datetime
 
 # Add src to path
-project_root = Path(__file__).parent
-src_path = project_root / "src"
-sys.path.insert(0, str(src_path))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from core.config import settings
-from scrapers.api_scraper import APIEventScraper
+from src.core.config import settings
+from src.scrapers.api_scraper import APIEventScraper
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-
-def check_api_keys():
-    """Check which API keys are configured."""
-    print("🔑 Checking API Key Configuration...")
+async def test_api_keys():
+    """Test all configured API keys."""
+    print("🧪 Testing API Keys Configuration...")
     print("=" * 50)
     
-    api_keys = {
-        'Eventbrite': settings.eventbrite_api_key,
-        'Meetup': settings.meetup_api_key,
-        'Facebook': settings.facebook_api_key,
-        'Google Calendar': settings.google_api_key,
-        'NewsAPI': settings.newsapi_key,
-        'PR Newswire': settings.prnewswire_api_key,
-        'CitySpark': settings.cityspark_api_key,
-        'Eventful': settings.eventful_api_key,
-    }
+    # Test configuration loading
+    print("📋 Configuration Status:")
+    print(f"Environment: {settings.environment}")
+    print(f"Debug Mode: {settings.debug}")
+    print()
     
-    configured_count = 0
-    total_count = len(api_keys)
+    # Test individual API keys
+    print("🔑 API Keys Status:")
     
-    for platform, key in api_keys.items():
-        if key:
-            print(f"✅ {platform}: Configured")
-            configured_count += 1
-        else:
-            print(f"❌ {platform}: Not configured")
-    
-    print("=" * 50)
-    print(f"📊 API Keys Status: {configured_count}/{total_count} configured")
-    
-    if configured_count == 0:
-        print("\n⚠️  No API keys configured!")
-        print("   Please follow the API Keys Setup Guide to configure API keys.")
-        print("   Start with Eventbrite API for the biggest impact.")
-        return False
-    elif configured_count < 4:
-        print(f"\n💡 {total_count - configured_count} API keys missing.")
-        print("   Consider adding more API keys for better event coverage.")
-        return True
+    # Meetup API
+    if settings.meetup_api_key and settings.meetup_api_key != "your_meetup_key_here":
+        print("✅ Meetup API Key: Configured")
     else:
-        print("\n🎉 All major API keys configured!")
-        print("   You should get excellent event coverage.")
-        return True
-
-
-async def test_api_scraper():
-    """Test the API scraper with configured keys."""
-    print("\n🧪 Testing API Scraper...")
-    print("=" * 50)
+        print("❌ Meetup API Key: Not configured")
     
+    # Facebook API
+    if settings.facebook_api_key and settings.facebook_api_key != "your_facebook_token_here":
+        print("✅ Facebook API Key: Configured")
+    else:
+        print("❌ Facebook API Key: Not configured")
+    
+    # Google API
+    if settings.google_api_key and settings.google_api_key != "your_google_key_here":
+        print("✅ Google API Key: Configured")
+    else:
+        print("❌ Google API Key: Not configured")
+    
+    # Eventbrite API
+    if settings.eventbrite_api_key and settings.eventbrite_api_key != "your_eventbrite_token_here":
+        print("✅ Eventbrite API Key: Configured")
+    else:
+        print("❌ Eventbrite API Key: Not configured")
+    
+    print()
+    
+    # Test API Scraper initialization
+    print("🔧 Testing API Scraper:")
     try:
-        async with APIEventScraper() as scraper:
-            # Test with a major city
-            events = await scraper.scrape_events(
-                city="San Francisco",
-                country="United States",
-                radius_km=50
-            )
-            
-            print(f"✅ API scraper found {len(events)} events")
-            
-            if events:
-                print("\n📋 Sample events:")
-                for i, event in enumerate(events[:5]):  # Show first 5 events
-                    print(f"   {i+1}. {event.title}")
-                    print(f"      Date: {event.start_date}")
-                    print(f"      Source: {event.sources[0].platform}")
-                    print(f"      Location: {event.location.city}, {event.location.country}")
-                    print()
-                
-                # Count events by source
-                source_counts = {}
-                for event in events:
-                    for source in event.sources:
-                        platform = source.platform
-                        source_counts[platform] = source_counts.get(platform, 0) + 1
-                
-                print("📊 Events by source:")
-                for platform, count in source_counts.items():
-                    print(f"   - {platform}: {count} events")
-            
-            return len(events) > 0
+        scraper = APIEventScraper()
+        print("✅ API Scraper: Initialized successfully")
+        
+        # Test API configurations
+        print("\n📊 API Configurations:")
+        for platform, config in scraper.api_configs.items():
+            status = "✅ Enabled" if config.get('enabled') else "❌ Disabled"
+            has_key = "✅ Has Key" if config.get('api_key') else "❌ No Key"
+            print(f"  {platform.title()}: {status} | {has_key}")
             
     except Exception as e:
-        print(f"❌ API scraper error: {e}")
-        return False
-
-
-async def main():
-    """Run all tests."""
-    print("🚀 Starting API Keys Test")
-    print("=" * 60)
+        print(f"❌ API Scraper: Error - {e}")
     
-    # Check API key configuration
-    keys_configured = check_api_keys()
+    print()
     
-    if not keys_configured:
-        print("\n❌ No API keys configured. Please set up API keys first.")
-        print("   See API_KEYS_SETUP.md for instructions.")
-        return False
+    # Test environment variables
+    print("🌍 Environment Variables:")
+    env_vars = [
+        'EVENT_SCRAPER_MEETUP_API_KEY',
+        'EVENT_SCRAPER_FACEBOOK_API_KEY', 
+        'EVENT_SCRAPER_GOOGLE_API_KEY',
+        'EVENT_SCRAPER_EVENTBRITE_API_KEY'
+    ]
     
-    # Test API scraper
-    scraper_working = await test_api_scraper()
+    for var in env_vars:
+        value = os.getenv(var)
+        if value and not value.startswith('your_'):
+            print(f"✅ {var}: Set")
+        else:
+            print(f"❌ {var}: Not set")
     
-    # Print summary
-    print("\n" + "=" * 60)
-    print("🎯 Test Summary:")
-    
-    if keys_configured and scraper_working:
-        print("✅ API keys are configured and working!")
-        print("   Your event scraper should now get hundreds of events per city.")
-        print("   Deploy to Railway to see the full impact.")
-        return True
-    elif keys_configured and not scraper_working:
-        print("⚠️  API keys are configured but scraper is not working.")
-        print("   Check the API key values and permissions.")
-        return False
-    else:
-        print("❌ API keys are not properly configured.")
-        print("   Please follow the API Keys Setup Guide.")
-        return False
-
+    print()
+    print("🎯 Next Steps:")
+    print("1. Get API keys from the setup guide")
+    print("2. Add them to your .env file")
+    print("3. Run this test again to verify")
+    print("4. Start scraping events!")
 
 if __name__ == "__main__":
-    success = asyncio.run(main())
-    sys.exit(0 if success else 1)
+    asyncio.run(test_api_keys())

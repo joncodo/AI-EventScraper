@@ -465,9 +465,9 @@ class RSSEventScraper:
             # Create event source
             source = EventSource(
                 platform="rss",
-                url=feed_url,
-                event_id=link or title,
-                scraped_at=datetime.utcnow()
+                url=link or feed_url,
+                scraped_at=datetime.utcnow(),
+                source_id=link or title
             )
             
             # Create event
@@ -548,8 +548,8 @@ class RSSEventScraper:
             source = EventSource(
                 platform="ical",
                 url=feed_url,
-                event_id=str(component.get('uid', title)),
-                scraped_at=datetime.utcnow()
+                scraped_at=datetime.utcnow(),
+                source_id=str(component.get('uid', title))
             )
             
             # Create event

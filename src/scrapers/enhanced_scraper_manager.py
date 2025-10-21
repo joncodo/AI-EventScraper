@@ -296,7 +296,11 @@ class EnhancedScraperManager:
                 if existing:
                     # Update existing event with new sources
                     existing_event = existing[0]
-                    existing_event.sources.extend(event.sources)
+                    
+                    # Merge sources, avoiding duplicates
+                    existing_source_urls = {source.url for source in existing_event.sources}
+                    new_sources = [source for source in event.sources if source.url not in existing_source_urls]
+                    existing_event.sources.extend(new_sources)
                     existing_event.updated_at = datetime.utcnow()
                     
                     # Update in database

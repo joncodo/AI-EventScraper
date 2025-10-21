@@ -159,7 +159,7 @@ worker: BackgroundRefreshWorker | None = None
 
 # Dependency to get database connection
 async def get_database():
-    if not db.db:
+    if db.db is None:
         try:
             await db.connect()
         except Exception as e:
@@ -200,7 +200,9 @@ async def root():
             "stats": "/stats",
             "health": "/health",
             "cities": "/cities",
-            "categories": "/categories"
+            "categories": "/categories",
+            "sources": "/sources",
+            "events_by_source": "/events/source/{platform}"
         }
     }
 
@@ -366,7 +368,8 @@ async def get_events(
     start_date_max: Optional[datetime] = Query(None, description="Maximum start date"),
     tags: Optional[str] = Query(None, description="Comma-separated tags"),
     ai_processed: Optional[bool] = Query(None, description="Filter by AI processing status"),
-    confidence_min: Optional[float] = Query(None, description="Minimum confidence score")
+    confidence_min: Optional[float] = Query(None, description="Minimum confidence score"),
+    source_platform: Optional[str] = Query(None, description="Filter by source platform")
 ):
     """Get events with filtering and pagination"""
     try:
@@ -408,6 +411,9 @@ async def get_events(
         
         if confidence_min is not None:
             filter_query["confidence_score"] = {"$gte": confidence_min}
+        
+        if source_platform:
+            filter_query["sources.platform"] = source_platform
         
         # Get total count
         total_count = await database.events.count_documents(filter_query)
@@ -729,6 +735,70 @@ async def get_recent_events(
         
     except Exception as e:
         logger.error(f"Error getting recent events: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/sources", response_model=Dict[str, Any])
+async def get_source_statistics():
+    """Get statistics about data sources"""
+    try:
+        database = await get_database()
+        if database is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        # Get source statistics using the new method
+        from src.core.database import db
+        stats = await db.get_source_statistics()
+        
+        return stats
+        
+    except Exception as e:
+        logger.error(f"Error getting source statistics: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/events/source/{platform}", response_model=Dict[str, Any])
+async def get_events_by_source(
+    platform: str = Path(..., description="Source platform name"),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(50, ge=1, le=1000, description="Items per page")
+):
+    """Get events from a specific source platform"""
+    try:
+        database = await get_database()
+        if database is None:
+            raise HTTPException(status_code=503, detail="Database not available")
+        
+        # Get events by source platform
+        from src.core.database import db
+        events = await db.find_events_by_source_platform(platform)
+        
+        # Calculate pagination
+        total_count = len(events)
+        skip = (page - 1) * limit
+        paginated_events = events[skip:skip + limit]
+        
+        # Convert to response format
+        event_responses = [event_doc_to_response(event.dict(by_alias=True)) for event in paginated_events]
+        
+        # Calculate pagination info
+        total_pages = (total_count + limit - 1) // limit
+        has_next = page < total_pages
+        has_prev = page > 1
+        
+        return {
+            "events": event_responses,
+            "platform": platform,
+            "pagination": {
+                "page": page,
+                "limit": limit,
+                "total_count": total_count,
+                "total_pages": total_pages,
+                "has_next": has_next,
+                "has_prev": has_prev
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting events by source: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Startup and shutdown events

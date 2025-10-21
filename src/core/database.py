@@ -65,6 +65,8 @@ class Database:
             ("updated_at", DESCENDING),
             ("view_count", DESCENDING),
             ("next_refresh_at", ASCENDING),
+            ("sources.platform", ASCENDING),
+            ("sources.url", ASCENDING),
         ]
         
         for index_spec in indexes:
@@ -252,6 +254,46 @@ class Database:
             mongo_query["tags"] = {"$in": query_request.tags}
         
         return await self.db.events.count_documents(mongo_query)
+    
+    async def find_events_by_source_platform(self, platform: str) -> List[Event]:
+        """Find events by source platform."""
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+        
+        cursor = self.db.events.find({"sources.platform": platform})
+        events = []
+        
+        async for doc in cursor:
+            events.append(Event(**doc))
+        
+        return events
+    
+    async def get_source_statistics(self) -> Dict[str, Any]:
+        """Get statistics about data sources."""
+        if self.db is None:
+            raise RuntimeError("Database not connected")
+        
+        # Aggregate source statistics
+        pipeline = [
+            {"$unwind": "$sources"},
+            {"$group": {
+                "_id": "$sources.platform",
+                "count": {"$sum": 1},
+                "unique_events": {"$addToSet": "$_id"}
+            }},
+            {"$project": {
+                "platform": "$_id",
+                "source_count": "$count",
+                "unique_event_count": {"$size": "$unique_events"}
+            }},
+            {"$sort": {"source_count": -1}}
+        ]
+        
+        stats = []
+        async for doc in self.db.events.aggregate(pipeline):
+            stats.append(doc)
+        
+        return {"source_platforms": stats}
 
 
 # Global database instance

@@ -1,7 +1,7 @@
 """Data models for the AI Event Scraper."""
 from datetime import datetime
 from typing import List, Optional, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from bson import ObjectId
 
 
@@ -45,7 +45,7 @@ class ContactInfo(BaseModel):
 class EventSource(BaseModel):
     """Information about where the event was scraped from."""
     platform: str  # e.g., "eventbrite", "meetup", "facebook"
-    url: str
+    url: str  # URL of the source page/API endpoint
     scraped_at: datetime
     source_id: Optional[str] = None  # ID from the source platform
 
@@ -73,7 +73,7 @@ class Event(BaseModel):
     tags: List[str] = Field(default_factory=list)
     
     # Source information
-    sources: List[EventSource] = Field(default_factory=list)
+    sources: List[EventSource] = Field(default_factory=list, min_items=1)
     
     # AI processing
     ai_processed: bool = False
@@ -90,6 +90,13 @@ class Event(BaseModel):
     staleness_tier: Optional[str] = None  # e.g., "high", "medium", "low"
     next_refresh_at: Optional[datetime] = None
     last_viewed_at: Optional[datetime] = None
+    
+    @model_validator(mode='after')
+    def validate_sources(self):
+        """Ensure every event has at least one source."""
+        if not self.sources:
+            raise ValueError("Every event must have at least one source")
+        return self
     
     class Config:
         populate_by_name = True
