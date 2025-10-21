@@ -31,19 +31,19 @@ class APIEventScraper:
                 'base_url': 'https://api.meetup.com',
                 'endpoint': '/find/upcoming_events',
                 'api_key': settings.meetup_api_key if hasattr(settings, 'meetup_api_key') else None,
-                'enabled': True
+                'enabled': False  # Disable Meetup API - requires OAuth 2.0
             },
             'google_calendar': {
                 'base_url': 'https://www.googleapis.com/calendar/v3',
                 'endpoint': '/calendars/{calendar_id}/events',
                 'api_key': settings.google_api_key if hasattr(settings, 'google_api_key') else None,
-                'enabled': True
+                'enabled': False  # Disable Google Calendar API for now due to calendar access issues
             },
             'facebook': {
                 'base_url': 'https://graph.facebook.com/v18.0',
                 'endpoint': '/search',
                 'api_key': settings.facebook_api_key if hasattr(settings, 'facebook_api_key') else None,
-                'enabled': True
+                'enabled': False  # Disable Facebook API for now due to complex authentication requirements
             }
         }
         

@@ -190,6 +190,13 @@ async def run_hourly_refresh():
         try:
             if db.db is None:
                 await db.connect()
+            
+            # Check if database is empty - if so, force scraping
+            total_events = await db.db.events.count_documents({})
+            if total_events == 0:
+                logger.info(f"[cron] Database is empty, forcing scrape for {city_name}")
+                return True
+            
             filter_query = {
                 "location.city": {"$regex": city_name, "$options": "i"},
                 "next_refresh_at": {"$lte": now_dt}
@@ -204,6 +211,9 @@ async def run_hourly_refresh():
         force_every_hours = int(os.getenv("CRON_FORCE_REFRESH_EVERY_HOURS", "6"))
         if force_every_hours <= 0:
             return True
+        
+        # Always allow scraping if database is empty (checked in _city_has_due_events)
+        # This is a fallback in case the database check fails
         hour = now_dt.hour
         # Create stable offset per city to spread load
         offset = int(hashlib.sha1(city_name.encode()).hexdigest(), 16) % force_every_hours

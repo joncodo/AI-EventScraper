@@ -27,20 +27,20 @@ class EnhancedScraperManager:
     def __init__(self):
         # Alternative data sources (most reliable)
         self.alternative_scrapers = [
-            RSSEventScraper(),
+            # RSSEventScraper(),  # Disabled - RSS feeds not providing good data
             APIEventScraper(),
             LocalEventsScraper(),
         ]
         
-        # Enhanced web scrapers (stealth)
+        # Enhanced web scrapers (stealth) - disabled problematic ones
         self.enhanced_scrapers = [
-            EnhancedEventbriteScraper(),
+            # EnhancedEventbriteScraper(),  # Disabled - causing 404 errors
         ]
         
-        # Regular web scrapers (fallback)
+        # Regular web scrapers (fallback) - disabled problematic ones
         self.regular_scrapers: List[BaseScraper] = [
-            MeetupScraper(),
-            FacebookScraper()
+            # MeetupScraper(),  # Disabled - requires OAuth 2.0
+            # FacebookScraper()  # Disabled - requires complex authentication
         ]
         
         # All scrapers combined (prioritized by reliability)

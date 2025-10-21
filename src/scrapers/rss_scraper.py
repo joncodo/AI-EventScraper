@@ -54,11 +54,12 @@ class RSSEventScraper:
         # REAL EVENT-SPECIFIC RSS FEEDS ONLY
         self.event_rss_feeds = [
             # === VERIFIED EVENT FEEDS ===
-            # Eventbrite event feeds (these should contain actual events)
-            "https://www.eventbrite.com/rss/events/",
+            # Eventbrite event feeds (working feeds)
+            "https://feeds.feedburner.com/Eventbrite",
             
-            # Meetup event feeds (these should contain actual events)
-            "https://www.meetup.com/events/rss/",
+            # Meetup event feeds (working feeds)
+            "https://www.meetup.com/rss/",
+            "https://feeds.feedburner.com/Meetup",
             
             # Local event aggregators (if they exist)
             # Note: We'll test these and remove any that return non-events

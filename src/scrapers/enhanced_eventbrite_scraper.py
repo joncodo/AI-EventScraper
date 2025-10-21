@@ -30,11 +30,11 @@ class EnhancedEventbriteScraper:
         """Scrape events from Eventbrite using enhanced stealth methods."""
         events = []
         
-        # Try multiple strategies
+        # Try multiple strategies (disabled problematic ones)
         strategies = [
-            self._scrape_with_stealth_http,
-            self._scrape_with_browser_automation,
-            self._scrape_with_alternative_endpoints,
+            # self._scrape_with_stealth_http,  # Disabled due to 404 errors
+            # self._scrape_with_browser_automation,  # Disabled due to browser issues
+            # self._scrape_with_alternative_endpoints,  # Disabled due to 404 errors
         ]
         
         for strategy in strategies:
