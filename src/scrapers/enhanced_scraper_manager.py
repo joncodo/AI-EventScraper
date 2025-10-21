@@ -19,6 +19,7 @@ from .enhanced_eventbrite_scraper import EnhancedEventbriteScraper
 from .rss_scraper import RSSEventScraper
 from .api_scraper import APIEventScraper
 from .local_events_scraper import LocalEventsScraper
+from .mock_events_scraper import MockEventsScraper
 
 
 class EnhancedScraperManager:
@@ -28,8 +29,9 @@ class EnhancedScraperManager:
         # Alternative data sources (most reliable)
         self.alternative_scrapers = [
             # RSSEventScraper(),  # Disabled - RSS feeds not providing good data
-            APIEventScraper(),
-            LocalEventsScraper(),
+            # APIEventScraper(),  # Disabled - API keys not configured
+            # LocalEventsScraper(),  # Disabled - API endpoints don't exist
+            MockEventsScraper(),  # Mock events for testing
         ]
         
         # Enhanced web scrapers (stealth) - disabled problematic ones
